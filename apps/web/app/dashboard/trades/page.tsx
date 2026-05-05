@@ -90,11 +90,13 @@ export default function TradeLogPage() {
           {trades.map((trade, i) => (
             <div 
               key={i} 
-              className="grid grid-cols-8 px-6 py-4 items-center border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer group"
+              className="grid grid-cols-8 px-6 py-4 items-center border-b border-slate-50 hover:bg-[#F8FAFC] transition-all cursor-pointer group relative"
             >
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#2563EB] scale-y-0 group-hover:scale-y-100 transition-transform origin-center" />
+              
               <div className="col-span-2 flex flex-col">
-                <span className="font-bold text-slate-900">{trade.pair}</span>
-                <span className="text-[11px] text-slate-400 font-medium">{trade.date} · {trade.time}</span>
+                <span className="font-bold text-[#1E293B] text-[15px] group-hover:text-[#2563EB] transition-colors">{trade.pair}</span>
+                <span className="text-[11px] text-[#64748B] font-medium uppercase tracking-wider">{trade.date} · {trade.time}</span>
               </div>
               
               <div>
@@ -106,13 +108,13 @@ export default function TradeLogPage() {
                 </Badge>
               </div>
               
-              <div className="text-sm font-semibold text-slate-600">{trade.entry}</div>
-              <div className="text-sm font-semibold text-slate-600">{trade.exit}</div>
-              <div className="text-sm font-bold text-slate-700">{trade.rr}</div>
+              <div className="text-sm font-semibold text-[#475569]">{trade.entry}</div>
+              <div className="text-sm font-semibold text-[#475569]">{trade.exit}</div>
+              <div className="text-sm font-bold text-[#334155]">{trade.rr}</div>
               
               <div className={cn(
                 "text-sm font-bold text-right pr-4",
-                trade.result.startsWith("+") ? "text-[#2563EB]" : trade.result.startsWith("-") ? "text-slate-900" : "text-slate-400"
+                trade.result.startsWith("+") ? "text-[#2563EB]" : trade.result.startsWith("-") ? "text-[#1E293B]" : "text-[#64748B]"
               )}>
                 {trade.result}
               </div>

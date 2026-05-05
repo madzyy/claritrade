@@ -23,8 +23,8 @@ export function StatCards() {
                 </span>
               </div>
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-bold text-[#0F172A] tracking-tight">
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold text-[#1E293B] tracking-tight mb-1">
                 {stat.value}
               </span>
               {stat.label === "NET P&L" && (

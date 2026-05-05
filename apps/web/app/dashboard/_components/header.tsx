@@ -16,14 +16,15 @@ import Image from "next/image"
 export function Header() {
   const pathname = usePathname()
   const isTradeLog = pathname === "/dashboard/trades"
+  const isImport = pathname === "/dashboard/import"
   
-  const title = isTradeLog ? "Trade Log" : "Dashboard"
+  const title = isTradeLog ? "Trade Log" : isImport ? "Import Journal" : "Dashboard"
 
   return (
     <header className="flex items-center justify-between px-8 py-3 border-b bg-white sticky top-0 z-30">
       <div className="flex items-center gap-5">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-[#0F172A] tracking-tight">{title}</h1>
+          <h1 className="text-xl font-bold text-[#1E293B] tracking-tight">{title}</h1>
           <Badge className="bg-[#2563EB]/5 text-[#2563EB] border-none px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider">
             Phase 1
           </Badge>
@@ -48,10 +49,10 @@ export function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48 p-1 rounded-xl shadow-lg border-slate-100 bg-white">
-            <DropdownMenuItem className="rounded-lg cursor-pointer text-[#64748B] focus:bg-slate-50 focus:text-[#0F172A]">Last 7 Days</DropdownMenuItem>
-            <DropdownMenuItem className="rounded-lg cursor-pointer text-[#64748B] focus:bg-slate-50 focus:text-[#0F172A]">Last 30 Days</DropdownMenuItem>
-            <DropdownMenuItem className="rounded-lg cursor-pointer text-[#64748B] focus:bg-slate-50 focus:text-[#0F172A]">This Month</DropdownMenuItem>
-            <DropdownMenuItem className="rounded-lg border-t mt-1 cursor-pointer text-[#64748B] focus:bg-slate-50 focus:text-[#0F172A]">Custom Range</DropdownMenuItem>
+            <DropdownMenuItem className="rounded-lg cursor-pointer text-[#475569] focus:bg-slate-50 focus:text-[#1E293B]">Last 7 Days</DropdownMenuItem>
+            <DropdownMenuItem className="rounded-lg cursor-pointer text-[#475569] focus:bg-slate-50 focus:text-[#1E293B]">Last 30 Days</DropdownMenuItem>
+            <DropdownMenuItem className="rounded-lg cursor-pointer text-[#475569] focus:bg-slate-50 focus:text-[#1E293B]">This Month</DropdownMenuItem>
+            <DropdownMenuItem className="rounded-lg border-t mt-1 cursor-pointer text-[#475569] focus:bg-slate-50 focus:text-[#1E293B]">Custom Range</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
