@@ -12,6 +12,7 @@ import {
 
 import { usePathname } from "next/navigation"
 import Image from "next/image"
+import { LogTradeModal } from "./log-trade-modal"
 
 export function Header() {
   const pathname = usePathname()
@@ -68,10 +69,7 @@ export function Header() {
           </Button>
         </div>
         
-        <Button className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-md gap-2 px-5 h-10 rounded-xl font-bold transition-all active:scale-95">
-          <Plus className="h-4 w-4 stroke-[3px]" />
-          Log Trade
-        </Button>
+        <LogTradeModal />
       </div>
     </header>
   )
