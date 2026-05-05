@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  trades    Trade[]
+}
+
+model Trade {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  pair           String
+  direction      String
+  entry          Float
+  exit           Float?
+  stopLoss       Float
+  takeProfit     Float?
+  lotSize        Float
+  rr             Float?
+  result         Float?
+  outcome        String?
+  session        String?
+  tags           String[]
+  psychologyNote String?
+  screenshotUrl  String?
+  dateOpened     DateTime
+  dateClosed     DateTime?
+  createdAt      DateTime @default(now())
+  
+  @@index([userId])
+  @@index([dateOpened])
+}
+
+model NewsEvent {
+  id        String   @id @default(cuid())
+  title     String
+  currency  String
+  impact    String
+  eventTime DateTime
+  createdAt DateTime @default(now())
+}
