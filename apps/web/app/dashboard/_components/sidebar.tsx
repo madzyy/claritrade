@@ -96,31 +96,44 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer Section */}
-      <div className="mt-auto pt-4 space-y-4">
-        <Button 
-          className={cn(
-            "w-full bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold rounded-xl transition-all duration-500",
-            isCollapsed ? "h-12 w-12 p-0 mx-auto rounded-full" : "h-12 py-6"
-          )}
-        >
-          {isCollapsed ? <Sparkles size={20} className="shrink-0" /> : <span className="transition-opacity duration-300 whitespace-nowrap">Upgrade to Pro</span>}
-        </Button>
+      {/* Footer Section - Premium Overhaul */}
+      <div className="mt-auto pt-6 flex flex-col gap-6">
+        {!isCollapsed ? (
+          <div className="bg-[#2563EB] rounded-2xl p-5 mb-2 text-white relative overflow-hidden group shadow-lg shadow-[#2563EB]/20">
+            <div className="relative z-10">
+              <h4 className="font-bold text-sm mb-1">Upgrade to Pro</h4>
+              <p className="text-[10px] text-blue-100/80 leading-relaxed mb-4">
+                Access advanced analytics and unlimited logs.
+              </p>
+              <button className="w-full bg-white/10 hover:bg-white/20 transition-colors py-2 rounded-lg text-[10px] font-bold">
+                Learn More
+              </button>
+            </div>
+            {/* Decorative background shapes */}
+            <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500" />
+            <div className="absolute -left-8 -top-8 w-20 h-20 bg-blue-400/20 rounded-full blur-xl group-hover:translate-x-4 transition-transform duration-500" />
+          </div>
+        ) : (
+          <button className="h-12 w-12 mx-auto flex items-center justify-center bg-[#2563EB] text-white rounded-full shadow-lg shadow-[#2563EB]/20 hover:scale-105 transition-transform active:scale-95">
+            <Sparkles size={20} />
+          </button>
+        )}
         
         <div className={cn(
-          "flex items-center border-t pt-4 transition-all duration-500",
-          isCollapsed ? "justify-center" : "px-2 pb-2"
+          "flex items-center transition-all duration-500",
+          isCollapsed ? "justify-center" : "px-2"
         )}>
-          <Avatar className="h-10 w-10 border-2 border-[#E2E8F0] shrink-0 transition-transform duration-300 hover:scale-105">
-            <AvatarImage src="/placeholder-user.jpg" />
-            <AvatarFallback className="bg-[#F1F5F9] text-[#2563EB]">JD</AvatarFallback>
+          <Avatar className="h-10 w-10 border-2 border-white shadow-sm shrink-0 transition-transform duration-300 hover:scale-105">
+            <div className="w-full h-full bg-[#2563EB]/10 flex items-center justify-center text-[#2563EB] font-bold text-xs">
+              AR
+            </div>
           </Avatar>
           <div className={cn(
             "flex flex-col ml-3 transition-all duration-500 overflow-hidden",
             isCollapsed ? "w-0 opacity-0 invisible" : "w-auto opacity-100 visible"
           )}>
-            <span className="text-sm font-semibold text-[#0F172A] whitespace-nowrap">John Doe</span>
-            <span className="text-xs text-[#64748B] whitespace-nowrap">Trader Account</span>
+            <span className="text-sm font-bold text-[#1E293B] whitespace-nowrap leading-none mb-1">Alex Rivers</span>
+            <span className="text-[10px] font-medium text-[#94A3B8] whitespace-nowrap">Pro Member</span>
           </div>
         </div>
       </div>

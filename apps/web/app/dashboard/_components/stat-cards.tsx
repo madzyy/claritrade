@@ -1,10 +1,12 @@
 import { Card, CardContent } from "@workspace/ui/components/card"
+import { Badge } from "@workspace/ui/components/badge"
+import { TrendingUp, Percent, Target, BarChart3 } from "lucide-react"
 
 const stats = [
-  { label: "NET P&L", value: "$0.00", subtext: "--" },
-  { label: "WIN RATE", value: "0%", subtext: "0 trades" },
-  { label: "AVG RR", value: "0.0", subtext: "--" },
-  { label: "TOTAL TRADES", value: "0", subtext: "No data" },
+  { label: "NET P&L", value: "+$342.00", change: "+12%", icon: TrendingUp },
+  { label: "WIN RATE", value: "64%", change: null, icon: Percent },
+  { label: "AVG RR", value: "1.8", change: null, icon: Target },
+  { label: "TOTAL TRADES", value: "14", change: null, icon: BarChart3 },
 ]
 
 export function StatCards() {
@@ -17,20 +19,26 @@ export function StatCards() {
               <span className="text-[11px] font-bold tracking-[0.1em] text-[#64748B] uppercase">
                 {stat.label}
               </span>
-              <div className="flex items-center gap-1.5 bg-[#F8FAFC] px-2 py-1 rounded-lg border border-[#F1F5F9] transition-colors group-hover:bg-[#2563EB]/5 group-hover:border-[#2563EB]/10">
-                <span className="text-[10px] font-bold text-[#94A3B8] group-hover:text-[#2563EB]">
-                  {stat.subtext}
-                </span>
+              <div className="h-8 w-8 bg-[#F8FAFC] group-hover:bg-[#2563EB]/5 rounded-lg flex items-center justify-center transition-colors">
+                <stat.icon className="h-4 w-4 text-[#94A3B8] group-hover:text-[#2563EB] transition-colors" />
               </div>
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-bold text-[#1E293B] tracking-tight mb-1">
-                {stat.value}
-              </span>
-              {stat.label === "NET P&L" && (
-                <span className="text-[12px] font-bold text-[#22C55E] ml-1">
-                  +0.0%
+              <div className="flex items-end gap-3 mb-1">
+                <span className="text-2xl font-bold text-[#1E293B] tracking-tight">
+                  {stat.value}
                 </span>
+                {stat.change && (
+                  <Badge className="bg-[#2563EB]/5 text-[#2563EB] border-none px-2 py-0.5 text-[10px] font-bold rounded-md mb-1.5">
+                    {stat.change}
+                  </Badge>
+                )}
+              </div>
+              {stat.label === "NET P&L" && (
+                <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-500">
+                  <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                  Performance Insight
+                </div>
               )}
             </div>
           </CardContent>
