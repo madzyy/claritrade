@@ -11,7 +11,7 @@ export function StatCards() {
   return (
     <div className="grid grid-cols-4 gap-6 px-8 py-6">
       {stats.map((stat) => (
-        <Card key={stat.label} className="group border-[#F1F5F9] bg-white shadow-[0_2px_12px_-3px_rgba(0,0,0,0.04)] rounded-2xl transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 overflow-hidden relative">
+        <Card key={stat.label} className="group border-[#F1F5F9] bg-white shadow-[0_2px_12px_-3px_rgba(0,0,0,0.04)] rounded-xl transition-all duration-300 hover:shadow-[0_8px_30_rgba(0,0,0,0.08)] hover:-translate-y-1 overflow-hidden relative">
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <span className="text-[11px] font-bold tracking-[0.1em] text-[#64748B] uppercase">

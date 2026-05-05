@@ -10,17 +10,28 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
 
+import { usePathname } from "next/navigation"
 import Image from "next/image"
 
 export function Header() {
+  const pathname = usePathname()
+  const isTradeLog = pathname === "/dashboard/trades"
+  
+  const title = isTradeLog ? "Trade Log" : "Dashboard"
+
   return (
     <header className="flex items-center justify-between px-8 py-3 border-b bg-white sticky top-0 z-30">
       <div className="flex items-center gap-5">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-[#0F172A] tracking-tight">Dashboard</h1>
+          <h1 className="text-xl font-bold text-[#0F172A] tracking-tight">{title}</h1>
           <Badge className="bg-[#2563EB]/5 text-[#2563EB] border-none px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider">
             Phase 1
           </Badge>
+          {isTradeLog && (
+            <Badge className="bg-slate-100 text-slate-400 border-none px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider">
+              History
+            </Badge>
+          )}
         </div>
         
         <div className="h-4 w-[1px] bg-slate-200" />
@@ -28,8 +39,12 @@ export function Header() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-9 px-4 text-sm font-medium text-[#64748B] hover:bg-slate-50 border-none bg-transparent gap-2 transition-all rounded-lg outline-none ring-0">
-              Date Range
-              <ChevronDown className="h-4 w-4 opacity-50" />
+              <span className="flex items-center gap-2 border px-3 py-1.5 rounded-lg bg-white shadow-sm">
+                <span className="w-4 h-4 rounded-sm border border-slate-200 flex items-center justify-center">
+                  <div className="w-2 h-2 bg-slate-200 rounded-sm" />
+                </span>
+                Date Range
+              </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48 p-1 rounded-xl shadow-lg border-slate-100 bg-white">
