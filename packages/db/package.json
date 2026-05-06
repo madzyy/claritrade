@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "main": "./index.ts",
   "types": "./index.ts",
+  "scripts": {
+    "build": "prisma generate --schema=./prisma/schema.prisma",
+    "generate": "prisma generate --schema=./prisma/schema.prisma"
+  },
   "license": "ISC",
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
