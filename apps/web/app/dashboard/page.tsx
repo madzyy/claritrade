@@ -3,6 +3,7 @@ import { StatCards } from "./_components/stat-cards"
 import { PerformanceChart } from "./_components/performance-chart"
 import { RecentTrades } from "./_components/recent-trades"
 import { Sparkles, Lightbulb } from "lucide-react"
+export const dynamic = "force-dynamic"
 
 export default async function DashboardPage() {
   const trades = await prisma.trade.findMany({
