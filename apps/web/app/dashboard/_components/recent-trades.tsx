@@ -36,7 +36,9 @@ export function RecentTrades({ trades }: RecentTradesProps) {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-[#1E293B]">{trade.pair}</span>
                 {trade.screenshotUrls && trade.screenshotUrls.length > 0 && (
-                  <ImageIcon className="h-3 w-3 text-[#2563EB]/50" title={`${trade.screenshotUrls.length} screenshots`} />
+                  <span title={`${trade.screenshotUrls.length} screenshots`}>
+                    <ImageIcon className="h-3 w-3 text-[#2563EB]/50" />
+                  </span>
                 )}
               </div>
               <div className="flex items-center">
