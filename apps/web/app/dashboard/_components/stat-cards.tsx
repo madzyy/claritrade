@@ -11,7 +11,7 @@ const stats = [
 
 export function StatCards() {
   return (
-    <div className="grid grid-cols-4 gap-6 px-8 py-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 px-4 lg:px-8 py-4 lg:py-6">
       {stats.map((stat) => (
         <Card key={stat.label} className="group border-[#F1F5F9] bg-white shadow-[0_2px_12px_-3px_rgba(0,0,0,0.04)] rounded-xl transition-all duration-300 hover:shadow-[0_8px_30_rgba(0,0,0,0.08)] hover:-translate-y-1 overflow-hidden relative">
           <CardContent className="p-6">
