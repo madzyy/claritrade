@@ -124,7 +124,7 @@ export function Sidebar() {
           isCollapsed ? "justify-center" : "px-2"
         )}>
           <div className="h-10 w-10 rounded-full bg-[#2563EB] flex items-center justify-center text-white shadow-md border-2 border-white shrink-0 transition-transform duration-300 hover:scale-105">
-            <User className="h-5 w-5" />
+            <User className="h-6 w-6" />
           </div>
           <div className={cn(
             "flex flex-col ml-3 transition-all duration-500 overflow-hidden",

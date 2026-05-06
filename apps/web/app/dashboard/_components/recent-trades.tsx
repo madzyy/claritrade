@@ -58,7 +58,7 @@ export function RecentTrades({ trades }: RecentTradesProps) {
                 "text-sm font-bold",
                 (trade.result || 0) >= 0 ? "text-[#2563EB]" : "text-red-500"
               )}>
-                {trade.result != null ? `${trade.result >= 0 ? "+" : ""}$${trade.result.toFixed(2)}` : "-"}
+                {trade.result != null ? `${trade.result >= 0 ? "+" : "-"}$${Math.abs(trade.result).toFixed(2)}` : "-"}
               </span>
               <div className="flex justify-end">
                 <Badge className={cn(
@@ -96,7 +96,7 @@ export function RecentTrades({ trades }: RecentTradesProps) {
                 "text-sm font-bold",
                 (trade.result || 0) >= 0 ? "text-[#2563EB]" : "text-red-500"
               )}>
-                {trade.result != null ? `${trade.result >= 0 ? "+" : ""}$${trade.result.toFixed(2)}` : "-"}
+                {trade.result != null ? `${trade.result >= 0 ? "+" : "-"}$${Math.abs(trade.result).toFixed(2)}` : "-"}
               </span>
               <Badge className={cn(
                   "border-none px-2 py-0.5 text-[8px] font-black rounded-sm tracking-tighter",

@@ -84,7 +84,7 @@ export function Header() {
           </Button>
           {/* Mobile Profile Icon */}
           <div className="lg:hidden h-9 w-9 rounded-full bg-[#2563EB] flex items-center justify-center text-white ml-1 shadow-md border border-white/20">
-            <User className="h-5 w-5" />
+            <User className="h-6 w-6" />
           </div>
         </div>
         
