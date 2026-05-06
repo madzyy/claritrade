@@ -1,16 +1,22 @@
+import { prisma } from "@workspace/db"
 import { StatCards } from "./_components/stat-cards"
 import { PerformanceChart } from "./_components/performance-chart"
 import { RecentTrades } from "./_components/recent-trades"
 import { Sparkles, Lightbulb } from "lucide-react"
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const trades = await prisma.trade.findMany({
+    orderBy: { dateOpened: "desc" },
+    take: 5,
+  })
+
   return (
     <div className="flex flex-col gap-8 pb-12">
       <StatCards />
       
       <PerformanceChart />
       
-      <RecentTrades />
+      <RecentTrades trades={trades} />
 
       {/* AI Insights Footer */}
       <div className="flex flex-wrap gap-4 px-8 mt-4">

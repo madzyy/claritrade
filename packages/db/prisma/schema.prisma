@@ -31,7 +31,7 @@ model Trade {
   session        String?
   tags           String[]
   psychologyNote String?
-  screenshotUrl  String?
+  screenshotUrls String[] @default([])
   dateOpened     DateTime
   dateClosed     DateTime?
   createdAt      DateTime @default(now())

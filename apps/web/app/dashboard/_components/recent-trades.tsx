@@ -1,17 +1,13 @@
-"use client"
-
-import * as React from "react"
 import { Card } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { cn } from "@workspace/ui/lib/utils"
+import { Image as ImageIcon } from "lucide-react"
 
-const trades = [
-  { pair: "XAUUSD", direction: "BUY", entry: "2318.40", exit: "2334.10", rr: "2.1", result: "+$84.00", outcome: "WIN" },
-  { pair: "EURUSD", direction: "BUY", entry: "1.0842", exit: "1.0821", rr: "1.5", result: "+$63.00", outcome: "WIN" },
-  { pair: "GBPUSD", direction: "SELL", entry: "1.2710", exit: "1.2695", rr: "0.8", result: "-$40.00", outcome: "LOSS" },
-]
+interface RecentTradesProps {
+  trades: any[]
+}
 
-export function RecentTrades() {
+export function RecentTrades({ trades }: RecentTradesProps) {
   return (
     <Card className="mx-8 p-8 border-[#F1F5F9] bg-white shadow-[0_2px_12px_-3px_rgba(0,0,0,0.04)] rounded-xl overflow-hidden">
       <div className="flex items-center justify-between mb-8">
@@ -36,31 +32,36 @@ export function RecentTrades() {
         
         <div className="flex flex-col">
           {trades.map((trade, idx) => (
-            <div key={idx} className="grid grid-cols-7 py-5 border-b border-slate-50 last:border-0 hover:bg-[#F8FAFC]/50 transition-colors group">
-              <span className="text-sm font-bold text-[#1E293B]">{trade.pair}</span>
+            <div key={trade.id || idx} className="grid grid-cols-7 py-5 border-b border-slate-50 last:border-0 hover:bg-[#F8FAFC]/50 transition-colors group">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-[#1E293B]">{trade.pair}</span>
+                {trade.screenshotUrls && trade.screenshotUrls.length > 0 && (
+                  <ImageIcon className="h-3 w-3 text-[#2563EB]/50" title={`${trade.screenshotUrls.length} screenshots`} />
+                )}
+              </div>
               <div className="flex items-center">
                 <Badge className={cn(
-                  "border-none px-2 py-0.5 text-[9px] font-black rounded-sm",
-                  trade.direction === "BUY" ? "bg-blue-50 text-blue-500" : "bg-slate-100 text-slate-500"
+                   "border-none px-2 py-0.5 text-[9px] font-black rounded-sm",
+                   trade.direction.toUpperCase() === "BUY" ? "bg-blue-50 text-blue-500" : "bg-slate-100 text-slate-500"
                 )}>
-                  {trade.direction}
+                  {trade.direction.toUpperCase()}
                 </Badge>
               </div>
-              <span className="text-sm font-medium text-[#64748B]">{trade.entry}</span>
-              <span className="text-sm font-medium text-[#64748B]">{trade.exit}</span>
-              <span className="text-sm font-bold text-[#475569]">{trade.rr}</span>
+              <span className="text-sm font-medium text-[#64748B]">{trade.entry.toFixed(2)}</span>
+              <span className="text-sm font-medium text-[#64748B]">{trade.exit?.toFixed(2) || "-"}</span>
+              <span className="text-sm font-bold text-[#475569]">{trade.rr?.toFixed(1) || "-"}</span>
               <span className={cn(
                 "text-sm font-bold",
-                trade.result.startsWith("+") ? "text-[#2563EB]" : "text-[#1E293B]"
+                (trade.result || 0) >= 0 ? "text-[#2563EB]" : "text-red-500"
               )}>
-                {trade.result}
+                {trade.result != null ? `${trade.result >= 0 ? "+" : ""}$${trade.result.toFixed(2)}` : "-"}
               </span>
               <div className="flex justify-end">
                 <Badge className={cn(
-                  "border-none px-3 py-1 text-[9px] font-black rounded-sm tracking-tighter",
-                  trade.outcome === "WIN" ? "bg-[#2563EB] text-white" : "bg-[#1E293B] text-white"
+                   "border-none px-3 py-1 text-[9px] font-black rounded-sm tracking-tighter",
+                   trade.outcome?.toUpperCase() === "WIN" ? "bg-[#2563EB] text-white" : trade.outcome ? "bg-[#1E293B] text-white" : "bg-slate-200 text-slate-500"
                 )}>
-                  {trade.outcome}
+                  {trade.outcome?.toUpperCase() || "PENDING"}
                 </Badge>
               </div>
             </div>

@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.105.3",
+    "@workspace/db": "workspace:*",
     "@workspace/ui": "workspace:*",
     "lucide-react": "^1.14.0",
     "next": "16.1.6",
