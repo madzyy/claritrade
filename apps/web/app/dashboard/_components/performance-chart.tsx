@@ -23,9 +23,9 @@ const data = [
 
 export function PerformanceChart() {
   return (
-    <Card className="mx-8 p-8 border-[#F1F5F9] bg-white shadow-[0_2px_12px_-3px_rgba(0,0,0,0.04)] rounded-xl overflow-hidden">
-      <div className="flex items-center justify-between mb-8">
-        <h3 className="text-xl font-bold text-[#1E293B]">Equity Curve</h3>
+    <Card className="mx-4 lg:mx-8 p-4 lg:p-8 border-[#F1F5F9] bg-white shadow-[0_2px_12px_-3px_rgba(0,0,0,0.04)] rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between mb-6 lg:mb-8">
+        <h3 className="text-lg lg:text-xl font-bold text-[#1E293B]">Equity Curve</h3>
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-[#2563EB]" />
           <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">Performance</span>

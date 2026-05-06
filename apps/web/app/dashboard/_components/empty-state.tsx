@@ -4,10 +4,10 @@ import { Card, CardContent } from "@workspace/ui/components/card"
 
 export function EmptyState() {
   return (
-    <div className="px-8 pb-8">
-      <Card className="border-[#E2E8F0] shadow-none rounded-2xl flex flex-col items-center justify-center py-20 bg-white">
-        <CardContent className="flex flex-col items-center text-center max-w-md">
-          <div className="relative mb-8">
+    <div className="px-4 lg:px-8 pb-8">
+      <Card className="border-[#E2E8F0] shadow-none rounded-2xl flex flex-col items-center justify-center py-12 lg:py-20 bg-white">
+        <CardContent className="flex flex-col items-center text-center max-w-md w-full">
+          <div className="relative mb-6 lg:mb-8 scale-90 lg:scale-100">
             <div className="w-64 h-40 bg-[#F8FAFC] rounded-xl border border-dashed border-[#CBD5E1] flex items-center justify-center overflow-hidden">
                {/* Simplified Illustration */}
                <div className="w-full h-full opacity-10 flex flex-col justify-end p-4 gap-2">
@@ -21,30 +21,30 @@ export function EmptyState() {
             </div>
           </div>
 
-          <h2 className="text-2xl font-bold text-[#0F172A] mb-3">No trades yet</h2>
-          <p className="text-[#64748B] text-sm mb-10 leading-relaxed px-4">
+          <h2 className="text-xl lg:text-2xl font-bold text-[#0F172A] mb-3 px-4">No trades yet</h2>
+          <p className="text-[#64748B] text-xs lg:text-sm mb-8 lg:mb-10 leading-relaxed px-6 lg:px-4">
             Log your first trade or import existing data to see your performance analytics and trading insights.
           </p>
 
-          <div className="flex gap-4 mb-8">
-            <Button className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white gap-2 px-8 py-6 rounded-xl font-semibold">
+          <div className="flex flex-col lg:flex-row gap-3 lg:gap-4 mb-8 w-full px-6 lg:px-0">
+            <Button className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white gap-2 px-8 py-5 lg:py-6 rounded-xl font-semibold w-full lg:w-auto text-sm">
               <Plus className="h-5 w-5" />
               Log Trade
             </Button>
-            <Button variant="outline" className="border-[#E2E8F0] text-[#0F172A] gap-2 px-8 py-6 rounded-xl font-semibold hover:bg-[#F8FAFC]">
+            <Button variant="outline" className="border-[#E2E8F0] text-[#0F172A] gap-2 px-8 py-5 lg:py-6 rounded-xl font-semibold hover:bg-[#F8FAFC] w-full lg:w-auto text-sm">
               <Upload className="h-5 w-5" />
               Import Data
             </Button>
           </div>
 
-          <div className="bg-[#F5F3FF] text-[#7C3AED] px-6 py-3 rounded-full flex items-center gap-2 text-sm font-medium">
+          <div className="bg-[#F5F3FF] text-[#7C3AED] px-5 lg:px-6 py-2.5 lg:py-3 rounded-full flex items-center gap-2 text-[10px] lg:text-sm font-medium mx-4">
             <Sparkles className="h-4 w-4" />
             AI Insights will appear here once data is available
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-3 gap-8 mt-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mt-10 lg:mt-12">
         <FeatureItem 
           icon={<BarChart2 className="h-5 w-5 text-[#2563EB]" />}
           title="Equity Tracking"

@@ -23,7 +23,7 @@ export function Sidebar() {
   return (
     <div 
       className={cn(
-        "relative flex h-full flex-col border-r bg-white p-4 transition-all duration-500 ease-in-out",
+        "relative hidden lg:flex h-full flex-col border-r bg-white p-4 transition-all duration-500 ease-in-out",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
@@ -123,11 +123,9 @@ export function Sidebar() {
           "flex items-center transition-all duration-500",
           isCollapsed ? "justify-center" : "px-2"
         )}>
-          <Avatar className="h-10 w-10 border-2 border-white shadow-sm shrink-0 transition-transform duration-300 hover:scale-105">
-            <div className="w-full h-full bg-[#2563EB]/10 flex items-center justify-center text-[#2563EB] font-bold text-xs">
-              AR
-            </div>
-          </Avatar>
+          <div className="h-10 w-10 rounded-full bg-[#2563EB] flex items-center justify-center text-white shadow-md border-2 border-white shrink-0 transition-transform duration-300 hover:scale-105">
+            <User className="h-6 w-6" />
+          </div>
           <div className={cn(
             "flex flex-col ml-3 transition-all duration-500 overflow-hidden",
             isCollapsed ? "w-0 opacity-0 invisible" : "w-auto opacity-100 visible"

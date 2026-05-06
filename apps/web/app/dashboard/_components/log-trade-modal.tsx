@@ -28,6 +28,8 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import { logTrade } from "../../actions/trades"
 
+import { toast } from "sonner"
+
 export function LogTradeModal() {
   const [isOpen, setIsOpen] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -37,13 +39,49 @@ export function LogTradeModal() {
     entry: "",
     exit: "",
     stopLoss: "",
+    takeProfit: "",
     lotSize: "",
+    risk: "1", // Default 1%
+    riskType: "percent", // 'percent' or 'amount'
+    accountBalance: "10000", // Default balance
     session: "new-york",
     psychologyNote: "",
     tags: ["BOS", "FVG"],
   })
   const [screenshots, setScreenshots] = React.useState<File[]>([])
   const [uploading, setUploading] = React.useState(false)
+
+  // Automatic Lot Size Calculation
+  React.useEffect(() => {
+    if (!formData.entry || !formData.stopLoss || !formData.risk) return
+
+    const entry = parseFloat(formData.entry)
+    const sl = parseFloat(formData.stopLoss)
+    const riskVal = parseFloat(formData.risk)
+    const balance = parseFloat(formData.accountBalance)
+    
+    if (isNaN(entry) || isNaN(sl) || isNaN(riskVal) || entry === sl) return
+
+    let riskAmount = formData.riskType === "percent" ? (balance * riskVal) / 100 : riskVal
+    const distance = Math.abs(entry - sl)
+    
+    const pair = formData.pair.toUpperCase()
+    let multiplier = 100000 // Default Forex Standard Lot
+    
+    if (pair.includes("JPY")) {
+      multiplier = 1000 // JPY pairs
+    } else if (pair.includes("XAU") || pair.includes("GOLD")) {
+      multiplier = 100 // Gold: 1.00 move = $100 per lot
+    } else if (pair.includes("BTC") || pair.includes("ETH") || pair.includes("US30") || pair.includes("NAS") || pair.includes("GER") || pair.includes("SPX")) {
+      multiplier = 1 // Indices/Crypto: 1.00 point = $1 per lot
+    }
+
+    const calculatedLotSize = riskAmount / (distance * multiplier)
+    
+    if (calculatedLotSize > 0 && calculatedLotSize < 1000) {
+      setFormData(prev => ({ ...prev, lotSize: calculatedLotSize.toFixed(2) }))
+    }
+  }, [formData.entry, formData.stopLoss, formData.risk, formData.riskType, formData.accountBalance, formData.pair])
 
   const uploadScreenshots = async () => {
     const urls: string[] = []
@@ -75,23 +113,31 @@ export function LogTradeModal() {
         setIsOpen(false)
         setScreenshots([])
         setFormData({
+          ...formData, // Preserve Risk and Account Balance settings
           pair: "",
           direction: "buy",
           entry: "",
           exit: "",
           stopLoss: "",
+          takeProfit: "",
           lotSize: "",
-          session: "new-york",
           psychologyNote: "",
           tags: ["BOS", "FVG"],
         })
+        toast.success("Trade logged successfully", {
+          description: `Logged ${formData.pair.toUpperCase()} ${formData.direction.toUpperCase()} at ${formData.entry}`,
+        })
       } else {
-        alert(result.error)
+        toast.error("Failed to log trade", {
+          description: result.error,
+        })
       }
     } catch (error) {
       console.error("Submit error:", error)
       setIsSubmitting(false)
-      alert("Failed to log trade")
+      toast.error("An error occurred", {
+        description: "Failed to log trade. Please try again.",
+      })
     }
   }
 
@@ -143,19 +189,79 @@ export function LogTradeModal() {
           
           {/* Form Content */}
           <div className="p-8 pr-4 flex flex-col gap-6 overflow-y-auto max-h-[70vh] scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent hover:scrollbar-thumb-slate-300 transition-all [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+            
+            {/* Risk Management Section */}
+            <div className="bg-[#F8FAFC] p-5 rounded-2xl border border-slate-100 grid grid-cols-2 gap-6 mb-2">
+              <div className="grid gap-2">
+                <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">Account Balance ($)</Label>
+                <Input 
+                  value={formData.accountBalance}
+                  onChange={(e) => handleChange("accountBalance", e.target.value)}
+                  placeholder="10000" 
+                  className="h-10 border-slate-200 bg-white rounded-lg font-bold text-[#1E293B] shadow-sm" 
+                />
+              </div>
+              <div className="grid gap-2">
+                <div className="flex justify-between items-center">
+                  <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">Risk</Label>
+                  <div className="flex bg-slate-200 p-0.5 rounded-md scale-90 origin-right">
+                    <button 
+                      onClick={() => handleChange("riskType", "percent")}
+                      className={cn("px-2 py-0.5 text-[10px] font-bold rounded-sm transition-all", formData.riskType === "percent" ? "bg-white text-[#2563EB] shadow-sm" : "text-[#64748B]")}
+                    >
+                      %
+                    </button>
+                    <button 
+                      onClick={() => handleChange("riskType", "amount")}
+                      className={cn("px-2 py-0.5 text-[10px] font-bold rounded-sm transition-all", formData.riskType === "amount" ? "bg-white text-[#2563EB] shadow-sm" : "text-[#64748B]")}
+                    >
+                      $
+                    </button>
+                  </div>
+                </div>
+                <Input 
+                  value={formData.risk}
+                  onChange={(e) => handleChange("risk", e.target.value)}
+                  placeholder={formData.riskType === "percent" ? "1" : "100"} 
+                  className="h-10 border-slate-200 bg-white rounded-lg font-bold text-[#1E293B] shadow-sm" 
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-x-8 gap-y-6 pr-4">
               {/* Row 1 */}
               <div className="grid gap-2">
-                <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">Pair</Label>
-                <div className="relative group">
-                  <Input 
-                    value={formData.pair}
-                    onChange={(e) => handleChange("pair", e.target.value)}
-                    placeholder="XAUUSD" 
-                    className="h-11 border-slate-200 bg-[#F8FAFC] focus:bg-white rounded-lg transition-all font-semibold text-[#1E293B] pr-10 shadow-sm" 
-                  />
-                  <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#CBD5E1]" />
-                </div>
+                <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">Pair / Instrument</Label>
+                <Select 
+                  value={formData.pair} 
+                  onValueChange={(v) => handleChange("pair", v)}
+                >
+                  <SelectTrigger className="h-11 border-slate-200 bg-[#F8FAFC] focus:bg-white rounded-lg font-bold text-[#1E293B] shadow-sm">
+                    <SelectValue placeholder="Select Pair" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    <div className="px-2 py-1.5 text-[10px] font-bold text-[#94A3B8] uppercase">Forex Majors</div>
+                    <SelectItem value="EURUSD">EURUSD</SelectItem>
+                    <SelectItem value="GBPUSD">GBPUSD</SelectItem>
+                    <SelectItem value="USDJPY">USDJPY</SelectItem>
+                    <SelectItem value="AUDUSD">AUDUSD</SelectItem>
+                    <SelectItem value="USDCHF">USDCHF</SelectItem>
+                    
+                    <div className="px-2 py-1.5 mt-2 text-[10px] font-bold text-[#94A3B8] uppercase border-t">Commodities</div>
+                    <SelectItem value="XAUUSD">XAUUSD (Gold)</SelectItem>
+                    <SelectItem value="XAGUSD">XAGUSD (Silver)</SelectItem>
+                    <SelectItem value="USOIL">WTI Oil</SelectItem>
+                    
+                    <div className="px-2 py-1.5 mt-2 text-[10px] font-bold text-[#94A3B8] uppercase border-t">Indices</div>
+                    <SelectItem value="NAS100">NAS100 (Nasdaq)</SelectItem>
+                    <SelectItem value="US30">US30 (Dow Jones)</SelectItem>
+                    <SelectItem value="GER40">GER40 (DAX)</SelectItem>
+
+                    <div className="px-2 py-1.5 mt-2 text-[10px] font-bold text-[#94A3B8] uppercase border-t">Crypto</div>
+                    <SelectItem value="BTCUSD">BTCUSD (Bitcoin)</SelectItem>
+                    <SelectItem value="ETHUSD">ETHUSD (Ethereum)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid gap-2">
                 <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">Direction</Label>
@@ -204,32 +310,44 @@ export function LogTradeModal() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">Lot Size</Label>
+                <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">Take Profit</Label>
+                <Input 
+                  value={formData.takeProfit}
+                  onChange={(e) => handleChange("takeProfit", e.target.value)}
+                  placeholder="2350.00" 
+                  className="h-11 border-slate-200 bg-[#F8FAFC] focus:bg-white rounded-lg transition-all font-semibold text-[#1E293B] shadow-sm" 
+                />
+              </div>
+
+              {/* Row 4 */}
+              <div className="grid gap-2">
+                <div className="flex items-center gap-2">
+                  <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">Lot Size</Label>
+                  <Badge className="bg-emerald-50 text-emerald-600 border-none text-[8px] px-1 py-0 font-black uppercase">Auto</Badge>
+                </div>
                 <Input 
                   value={formData.lotSize}
                   onChange={(e) => handleChange("lotSize", e.target.value)}
                   placeholder="0.10" 
-                  className="h-11 border-slate-200 bg-[#F8FAFC] focus:bg-white rounded-lg transition-all font-semibold text-[#1E293B] shadow-sm" 
+                  className="h-11 border-slate-200 bg-[#F8FAFC] focus:bg-white rounded-lg transition-all font-bold text-[#2563EB] shadow-sm" 
                 />
               </div>
-            </div>
-
-            {/* Session */}
-            <div className="grid gap-2">
-              <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">Session</Label>
-              <Select 
-                value={formData.session} 
-                onValueChange={(v) => handleChange("session", v)}
-              >
-                <SelectTrigger className="h-11 border-slate-200 bg-[#F8FAFC] focus:bg-white rounded-lg font-semibold text-[#1E293B] shadow-sm">
-                  <SelectValue placeholder="Select Session" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="london">London</SelectItem>
-                  <SelectItem value="new-york">New York</SelectItem>
-                  <SelectItem value="asian">Asian</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid gap-2">
+                <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">Session</Label>
+                <Select 
+                  value={formData.session} 
+                  onValueChange={(v) => handleChange("session", v)}
+                >
+                  <SelectTrigger className="h-11 border-slate-200 bg-[#F8FAFC] focus:bg-white rounded-lg font-semibold text-[#1E293B] shadow-sm">
+                    <SelectValue placeholder="Select Session" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="london">London</SelectItem>
+                    <SelectItem value="new-york">New York</SelectItem>
+                    <SelectItem value="asian">Asian</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Setup Tags */}
