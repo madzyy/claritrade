@@ -2,14 +2,16 @@ import { Card, CardContent } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
 import { TrendingUp, Percent, Target, BarChart3 } from "lucide-react"
 
-const stats = [
-  { label: "NET P&L", value: "+$342.00", change: "+12%", icon: TrendingUp },
-  { label: "WIN RATE", value: "64%", change: null, icon: Percent },
-  { label: "AVG RR", value: "1.8", change: null, icon: Target },
-  { label: "TOTAL TRADES", value: "14", change: null, icon: BarChart3 },
-]
+interface StatCardsProps {
+  stats: {
+    label: string
+    value: string
+    change: string | null
+    icon: any
+  }[]
+}
 
-export function StatCards() {
+export function StatCards({ stats }: StatCardsProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 px-4 lg:px-8 py-4 lg:py-6">
       {stats.map((stat) => (
