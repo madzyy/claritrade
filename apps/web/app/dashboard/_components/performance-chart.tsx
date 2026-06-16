@@ -12,16 +12,14 @@ import {
 } from "recharts"
 import { Card } from "@workspace/ui/components/card"
 
-const data = [
-  { day: "MON", value: 1200 },
-  { day: "TUE", value: 1350 },
-  { day: "WED", value: 1800 },
-  { day: "THU", value: 2100 },
-  { day: "FRI", value: 2600 },
-  { day: "SAT", value: 2400 },
-]
+interface PerformanceChartProps {
+  data: {
+    day: string
+    value: number
+  }[]
+}
 
-export function PerformanceChart() {
+export function PerformanceChart({ data }: PerformanceChartProps) {
   return (
     <Card className="mx-4 lg:mx-8 p-4 lg:p-8 border-[#F1F5F9] bg-white shadow-[0_2px_12px_-3px_rgba(0,0,0,0.04)] rounded-xl overflow-hidden">
       <div className="flex items-center justify-between mb-6 lg:mb-8">

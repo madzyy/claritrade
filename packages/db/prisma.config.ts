@@ -9,6 +9,8 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // CLI/migrations use the direct/session connection (port 5432).
+    // App runtime uses DATABASE_URL via the PrismaPg adapter in index.ts.
+    url: process.env["DIRECT_URL"],
   },
 });

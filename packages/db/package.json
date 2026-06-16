@@ -1,11 +1,15 @@
 {
   "name": "@workspace/db",
   "version": "1.0.0",
+  "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
   "scripts": {
     "build": "prisma generate --schema=./prisma/schema.prisma",
-    "generate": "prisma generate --schema=./prisma/schema.prisma"
+    "generate": "prisma generate --schema=./prisma/schema.prisma",
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "typecheck": "tsc --noEmit"
   },
   "license": "ISC",
   "dependencies": {
@@ -15,7 +19,11 @@
   },
   "devDependencies": {
     "@types/pg": "^8.20.0",
-    "prisma": "^7.8.0"
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "eslint": "^9.39.2",
+    "prisma": "^7.8.0",
+    "typescript": "^5.9.3"
   },
   "exports": {
     ".": "./index.ts"
