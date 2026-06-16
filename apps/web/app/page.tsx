@@ -18,9 +18,11 @@ import {
   ShieldCheck,
   Zap
 } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@workspace/ui/components/button"
 import { Badge } from "@workspace/ui/components/badge"
 import { DashboardMockup } from "@/components/dashboard-mockup"
+import { Logo } from "@/components/logo"
 
 function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -94,14 +96,7 @@ export default function Page() {
       <header className="sticky top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-neutral-950/70 border-b border-neutral-100 dark:border-neutral-900 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Compass className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-extrabold text-xl tracking-tight text-neutral-900 dark:text-white">
-              Clari<span className="text-blue-600 dark:text-blue-400">Trade</span>
-            </span>
-          </div>
+          <Logo width={150} height={44} priority />
 
           {/* Nav Links */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-neutral-600 dark:text-neutral-300">
@@ -123,8 +118,8 @@ export default function Page() {
                 {resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
             )}
-            <Button className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all">
-              Sign In
+            <Button asChild className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all">
+              <Link href="/login">Sign In</Link>
             </Button>
           </div>
         </div>
@@ -153,9 +148,11 @@ export default function Page() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button size="lg" className="w-full sm:w-auto bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 hover:bg-neutral-800 dark:hover:bg-neutral-100 font-bold px-8 py-6 rounded-xl shadow-lg transition-all group">
-              Start Journaling Free
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <Button asChild size="lg" className="w-full sm:w-auto bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 hover:bg-neutral-800 dark:hover:bg-neutral-100 font-bold px-8 py-6 rounded-xl shadow-lg transition-all group">
+              <Link href="/signup">
+                Start Journaling Free
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
             </Button>
             <a href="#preview" className="w-full sm:w-auto">
               <Button size="lg" variant="outline" className="w-full sm:w-auto border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 font-bold px-8 py-6 rounded-xl transition-all">
@@ -317,8 +314,8 @@ export default function Page() {
                 </ul>
               </div>
 
-              <Button variant="outline" className="w-full py-6 font-bold rounded-xl border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800">
-                Get Started
+              <Button asChild variant="outline" className="w-full py-6 font-bold rounded-xl border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800">
+                <Link href="/signup">Get Started</Link>
               </Button>
             </div>
 
@@ -368,8 +365,8 @@ export default function Page() {
                 </ul>
               </div>
 
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 font-bold rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all">
-                Sign Up Now
+              <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 font-bold rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all">
+                <Link href="/signup">Sign Up Now</Link>
               </Button>
             </div>
           </div>
@@ -435,8 +432,8 @@ export default function Page() {
               Join thousands of traders worldwide who use ClariTrade to manage capital, catalog statistics, and enforce trading discipline.
             </p>
             <div className="pt-2">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-8 py-6 rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all">
-                Get Started For Free
+              <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-8 py-6 rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all">
+                <Link href="/signup">Get Started For Free</Link>
               </Button>
             </div>
           </div>
@@ -446,9 +443,8 @@ export default function Page() {
       {/* Footer */}
       <footer className="border-t border-neutral-100 dark:border-neutral-900 bg-white dark:bg-neutral-950 py-12 px-4 sm:px-6 lg:px-8 text-center text-xs font-semibold text-neutral-400 dark:text-neutral-500 transition-colors duration-300">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <Compass className="h-4 w-4 text-blue-500" />
-            <span className="text-neutral-800 dark:text-white font-bold">ClariTrade</span>
+          <div className="flex items-center gap-3">
+            <Logo variant="icon" width={28} height={28} href={undefined} />
             <span>© {new Date().getFullYear()} ClariTrade Inc. All rights reserved.</span>
           </div>
 

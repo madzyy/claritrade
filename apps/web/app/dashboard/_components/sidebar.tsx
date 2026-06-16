@@ -7,7 +7,7 @@ import { LayoutGrid, NotebookText, Upload, Settings, User, ChevronLeft, ChevronR
 import { cn } from "@workspace/ui/lib/utils"
 import { Button } from "@workspace/ui/components/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
-import Image from "next/image"
+import { Logo } from "@/components/logo"
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid },
@@ -44,13 +44,13 @@ export function Sidebar() {
           "absolute transition-all duration-500 ease-in-out transform",
           isCollapsed ? "opacity-0 scale-50 -translate-x-10" : "opacity-100 scale-100 translate-x-0"
         )}>
-          <Image src="/logo-light.png" alt="Logo" width={160} height={48} className="object-contain" />
+          <Logo theme="light" width={160} height={48} href={undefined} />
         </div>
         <div className={cn(
           "absolute transition-all duration-500 ease-in-out transform",
           isCollapsed ? "opacity-100 scale-100 translate-x-0" : "opacity-0 scale-50 translate-x-10"
         )}>
-          <Image src="/logo-collapse.png" alt="Logo Icon" width={40} height={40} className="object-contain" />
+          <Logo variant="icon" width={40} height={40} href={undefined} />
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Plus, X, Search, Calendar, Info, Camera, Image as ImageIcon, Loader2 } from "lucide-react"
-import { supabase } from "../../../lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@workspace/ui/components/button"
 import { Badge } from "@workspace/ui/components/badge"
 import {
@@ -84,6 +84,7 @@ export function LogTradeModal() {
   }, [formData.entry, formData.stopLoss, formData.risk, formData.riskType, formData.accountBalance, formData.pair])
 
   const uploadScreenshots = async () => {
+    const supabase = createClient()
     const urls: string[] = []
     for (const file of screenshots) {
       const fileName = `${Date.now()}-${file.name.replace(/\s/g, "_")}`

@@ -20,7 +20,6 @@ import {
   ArrowDownRight, 
   Calendar, 
   Brain, 
-  Compass, 
   Clock, 
   AlertTriangle,
   Award,
@@ -32,6 +31,7 @@ import {
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@workspace/ui/components/card"
 import { Badge } from "@workspace/ui/components/badge"
+import { Logo } from "@/components/logo"
 
 const mockChartData = [
   { day: "MON", value: 10000 },
@@ -78,12 +78,7 @@ export function DashboardMockup() {
       <div className="hidden lg:flex w-64 border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex-col p-6 shrink-0 justify-between">
         <div className="space-y-6">
           {/* Logo */}
-          <div className="flex items-center gap-2.5 px-2">
-            <div className="h-9 w-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20">
-              <Compass className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-bold text-lg text-neutral-900 dark:text-white tracking-tight">ClariTrade</span>
-          </div>
+          <Logo theme="light" width={140} height={42} href={undefined} className="px-2" />
 
           {/* Navigation Links */}
           <div className="space-y-1">

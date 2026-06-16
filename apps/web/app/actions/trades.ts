@@ -1,20 +1,15 @@
 "use server"
 
+import { getOrCreatePrismaUser } from "@/lib/auth"
 import { prisma } from "@workspace/db"
 import { revalidatePath } from "next/cache"
 
 export async function logTrade(formData: any) {
   try {
-    // For now, we'll use a demo user since auth isn't set up yet.
-    let user = await prisma.user.findFirst()
-    
+    const user = await getOrCreatePrismaUser()
+
     if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: "demo@claritrade.com",
-          name: "Demo User",
-        },
-      })
+      return { success: false, error: "You must be signed in to log a trade." }
     }
 
     const entry = parseFloat(formData.entry)
