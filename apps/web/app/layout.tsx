@@ -1,12 +1,21 @@
-import { Geist, Geist_Mono, Inter, Lexend } from "next/font/google"
+import { Geist_Mono, Inter, Lexend } from "next/font/google"
 
 import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@workspace/ui/lib/utils";
 import { Toaster } from "sonner"
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'})
-const lexend = Lexend({subsets:['latin'],variable:'--font-heading'})
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+})
+
+const lexend = Lexend({
+  subsets: ["latin"],
+  variable: "--font-heading",
+  display: "swap",
+})
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
