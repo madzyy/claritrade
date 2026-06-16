@@ -3,26 +3,26 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { useTheme } from "next-themes"
-import { 
-  Sparkles, 
-  ArrowRight, 
-  Check, 
-  Compass, 
-  Brain, 
-  Clock, 
-  TrendingUp, 
-  ChevronDown, 
-  HelpCircle, 
-  Moon, 
+import {
+  Check,
+  Compass,
+  Brain,
+  Clock,
+  ChevronDown,
+  HelpCircle,
+  Moon,
   Sun,
-  ShieldCheck,
-  Zap
+  Zap,
+  Play,
+  Menu,
+  X,
 } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@workspace/ui/components/button"
 import { Badge } from "@workspace/ui/components/badge"
 import { DashboardMockup } from "@/components/dashboard-mockup"
 import { Logo } from "@/components/logo"
+import { cn } from "@workspace/ui/lib/utils"
 
 function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -65,14 +65,30 @@ const faqs = [
   }
 ]
 
+const navLinks = [
+  { href: "#features", label: "Features" },
+  { href: "#preview", label: "Demo" },
+  { href: "#pricing", label: "Pricing" },
+  { href: "#faqs", label: "FAQs" },
+]
+
 export default function Page() {
   const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [activeFaq, setActiveFaq] = useState<number | null>(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
   // Prevent hydration mismatch for client-side theme switcher
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 0)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   const toggleTheme = () => {
@@ -85,86 +101,156 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50 transition-colors duration-300">
-      
-      {/* Mesh Glow Background */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1400px] h-[600px] overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-20%] left-[20%] w-[500px] h-[500px] rounded-full bg-blue-500/10 dark:bg-blue-600/10 blur-[120px]" />
-        <div className="absolute top-[-10%] right-[20%] w-[450px] h-[450px] rounded-full bg-indigo-500/10 dark:bg-indigo-600/10 blur-[100px]" />
-      </div>
+      {/* Header */}
+      <header
+        className={cn(
+          "sticky top-0 z-50 bg-white/75 backdrop-blur-xl backdrop-saturate-150 transition-[border-color,background-color] duration-300 dark:bg-neutral-950/75",
+          scrolled
+            ? "border-b border-neutral-900/[0.06] dark:border-white/[0.06]"
+            : "border-b border-transparent"
+        )}
+      >
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+          <Logo width={140} height={40} priority />
 
-      {/* Header / Navbar */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-neutral-950/70 border-b border-neutral-100 dark:border-neutral-900 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <Logo width={150} height={44} priority />
-
-          {/* Nav Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-neutral-600 dark:text-neutral-300">
-            <a href="#features" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Features</a>
-            <a href="#preview" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Interactive Demo</a>
-            <a href="#pricing" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Pricing</a>
-            <a href="#faqs" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">FAQs</a>
+          <nav className="hidden items-center gap-8 md:flex" aria-label="Main">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+              >
+                {link.label}
+              </a>
+            ))}
           </nav>
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             {mounted && (
-              <button 
-                onClick={toggleTheme} 
-                className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-600 dark:text-neutral-400"
-                aria-label="Toggle Theme"
-                title="Press 'd' to toggle dark mode anywhere"
+              <button
+                onClick={toggleTheme}
+                className="hidden rounded-full p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 sm:inline-flex dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
+                aria-label="Toggle theme"
               >
-                {resolvedTheme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {resolvedTheme === "dark" ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
               </button>
             )}
-            <Button asChild className="hidden sm:inline-flex bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all">
-              <Link href="/login">Sign In</Link>
+            <Link
+              href="/login"
+              className="hidden text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:inline dark:text-neutral-400 dark:hover:text-white"
+            >
+              Sign in
+            </Link>
+            <Button
+              asChild
+              className="hidden rounded-full bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:inline-flex p-[21px]"
+            >
+              <Link href="/signup">Get started today</Link>
             </Button>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              className="inline-flex rounded-full p-2 text-neutral-600 transition-colors hover:bg-neutral-100 md:hidden dark:text-neutral-400 dark:hover:bg-neutral-800"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </button>
           </div>
         </div>
+
+        {mobileMenuOpen && (
+          <div className="border-t border-neutral-900/[0.06] bg-white/95 px-4 py-4 backdrop-blur-xl md:hidden dark:border-white/[0.06] dark:bg-neutral-950/95">
+            <nav className="flex flex-col gap-1" aria-label="Mobile">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                >
+                  {link.label}
+                </a>
+              ))}
+              <div className="mt-3 flex flex-col gap-2 border-t border-neutral-900/[0.06] pt-3 dark:border-white/[0.06]">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                >
+                  Sign in
+                </Link>
+                <Button
+                  asChild
+                  className="w-full rounded-full bg-blue-600 font-semibold text-white hover:bg-blue-500"
+                >
+                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                    Get started today
+                  </Link>
+                </Button>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
 
-      {/* Hero Section */}
-      <section className="relative pt-20 pb-16 lg:pt-32 lg:pb-24 px-4 sm:px-6 lg:px-8 z-10">
-        <div className="max-w-5xl mx-auto text-center space-y-8">
-          
-          {/* Tagline Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 text-xs font-bold uppercase tracking-wider animate-fadeIn">
-            <Sparkles className="h-3.5 w-3.5" />
-            Empowering Systematic Traders
-          </div>
-
-          {/* Main Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-[1.15] font-heading">
-            Trade with <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 dark:from-blue-400 dark:via-indigo-400 dark:to-violet-400">Clarity</span>.<br />
-            Journal with <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400">Discipline</span>.
+      {/* Hero */}
+      <section className="relative flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-4xl text-center">
+          <h1 className="text-5xl font-medium tracking-tight text-neutral-900 sm:text-6xl sm:leading-[1.1] dark:text-white">
+            Trading journals{" "}
+            <span className="relative inline-block whitespace-nowrap">
+              <span className="relative z-10 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
+                made simple
+              </span>
+              <span
+                aria-hidden="true"
+                className="absolute -inset-x-1 bottom-1 -z-0 h-[0.45em] rounded-full bg-blue-100/90 dark:bg-blue-500/15"
+              />
+            </span>{" "}
+            for serious traders.
           </h1>
 
-          {/* Subtitle */}
-          <p className="max-w-3xl mx-auto text-base sm:text-lg lg:text-xl text-neutral-500 dark:text-neutral-400 leading-relaxed font-medium">
-            The ultimate trading journal and analytics dashboard for forex, crypto, and stocks. Sync your trades with major economic news releases and track your mental triggers to discover your true edge.
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-600 dark:text-neutral-400">
+            Most trading journals are powerful, but painful to use. ClariTrade
+            syncs your trades with economic news, tracks psychology tags, and
+            surfaces the patterns that actually move your P&amp;L.
           </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button asChild size="lg" className="w-full sm:w-auto bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 hover:bg-neutral-800 dark:hover:bg-neutral-100 font-bold px-8 py-6 rounded-xl shadow-lg transition-all group">
-              <Link href="/signup">
-                Start Journaling Free
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+            <Button
+              asChild
+              size="lg"
+              className="h-12 w-full rounded-full bg-neutral-900 px-6 text-sm font-semibold text-white hover:bg-neutral-800 sm:w-auto dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100"
+            >
+              <Link href="/signup">Start journaling free</Link>
             </Button>
-            <a href="#preview" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-900 font-bold px-8 py-6 rounded-xl transition-all">
-                Try Sandbox Demo
-              </Button>
-            </a>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="h-12 w-full rounded-full border-neutral-200 bg-white px-6 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 sm:w-auto dark:border-neutral-800 dark:bg-transparent dark:text-neutral-300 dark:hover:bg-neutral-900"
+            >
+              <a href="#preview" className="inline-flex items-center gap-2">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-white">
+                  <Play className="h-3.5 w-3.5 fill-current" />
+                </span>
+                Watch demo
+              </a>
+            </Button>
           </div>
 
-          {/* Short notice */}
-          <div className="text-[11px] font-mono text-neutral-400">
-            No credit card required • Press <kbd className="bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">d</kbd> anytime to toggle dark mode
-          </div>
+          <p className="mt-8 text-sm text-neutral-500 dark:text-neutral-500">
+            No credit card required
+          </p>
         </div>
       </section>
 
@@ -190,7 +276,7 @@ export default function Page() {
         <div className="max-w-7xl mx-auto space-y-16">
           <div className="text-center space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">Built for Serious Traders</h2>
-            <h3 className="text-3xl lg:text-4xl font-extrabold text-neutral-900 dark:text-white font-heading">
+            <h3 className="text-3xl font-medium tracking-tight text-neutral-900 lg:text-4xl dark:text-white">
               Eliminate guesswork. Keep trade execution flawless.
             </h3>
           </div>
@@ -246,7 +332,7 @@ export default function Page() {
             <Badge variant="outline" className="text-blue-600 dark:text-blue-400 bg-blue-500/5 border-blue-500/20 px-3 py-1 font-bold text-[10px] uppercase tracking-wider">
               Interactive Preview
             </Badge>
-            <h2 className="text-3xl lg:text-4xl font-extrabold text-neutral-900 dark:text-white font-heading">
+            <h2 className="text-3xl font-medium tracking-tight text-neutral-900 lg:text-4xl dark:text-white">
               Explore ClariTrade Sandbox
             </h2>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">
@@ -272,7 +358,7 @@ export default function Page() {
           
           <div className="text-center space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">Simple Transparent Pricing</h2>
-            <h3 className="text-3xl lg:text-4xl font-extrabold text-neutral-900 dark:text-white font-heading">
+            <h3 className="text-3xl font-medium tracking-tight text-neutral-900 lg:text-4xl dark:text-white">
               An investment that pays for itself in one disciplined trade.
             </h3>
           </div>
@@ -379,7 +465,7 @@ export default function Page() {
         <div className="max-w-3xl mx-auto space-y-12">
           
           <div className="text-center space-y-4">
-            <h3 className="text-3xl font-extrabold text-neutral-900 dark:text-white font-heading">Frequently Asked Questions</h3>
+            <h3 className="text-3xl font-medium tracking-tight text-neutral-900 dark:text-white">Frequently Asked Questions</h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">Have questions? We have answers.</p>
           </div>
 
@@ -425,7 +511,7 @@ export default function Page() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.2),transparent_40%)]" />
           
           <div className="relative z-10 space-y-6 max-w-2xl mx-auto">
-            <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight font-heading">
+            <h2 className="text-3xl font-medium tracking-tight lg:text-4xl">
               Ready to claim your edge?
             </h2>
             <p className="text-sm sm:text-base text-neutral-400 leading-relaxed font-medium">
