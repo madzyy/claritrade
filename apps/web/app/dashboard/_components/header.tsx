@@ -1,20 +1,26 @@
 "use client"
 
-import { Bell, HelpCircle, ChevronDown, Plus, Menu, User } from "lucide-react"
+import { Bell, HelpCircle, Plus, Menu, User, LogOut } from "lucide-react"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
 
 import { usePathname } from "next/navigation"
-import Image from "next/image"
+import { Logo } from "@/components/logo"
 import { LogTradeModal } from "./log-trade-modal"
+import { signOut } from "@/app/actions/auth"
 
-export function Header() {
+type HeaderProps = {
+  userEmail?: string | null
+}
+
+export function Header({ userEmail }: HeaderProps) {
   const pathname = usePathname()
   const isTradeLog = pathname === "/dashboard/trades"
   const isImport = pathname === "/dashboard/import"
@@ -46,7 +52,7 @@ export function Header() {
 
         {/* Center Logo on Mobile */}
         <div className="lg:hidden flex items-center justify-center">
-          <Image src="/logo-light.png" alt="Logo" width={140} height={42} className="object-contain" />
+          <Logo theme="light" width={140} height={42} href={undefined} />
         </div>
         
         <div className="hidden lg:block h-4 w-[1px] bg-slate-200" />
@@ -82,13 +88,51 @@ export function Header() {
           <Button variant="ghost" size="icon" className="h-10 w-10 text-[#64748B] hover:text-[#2563EB] hover:bg-[#2563EB]/5 rounded-full transition-all hidden lg:flex">
             <HelpCircle className="h-5 w-5" />
           </Button>
-          {/* Mobile Profile Icon */}
-          <div className="lg:hidden h-9 w-9 rounded-full bg-[#2563EB] flex items-center justify-center text-white ml-1 shadow-md border border-white/20">
-            <User className="h-6 w-6" />
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="lg:hidden h-9 w-9 rounded-full bg-[#2563EB] flex items-center justify-center text-white ml-1 shadow-md border border-white/20"
+                aria-label="Account menu"
+              >
+                <User className="h-6 w-6" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {userEmail && (
+                <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                  {userEmail}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer text-red-600 focus:text-red-600"
+                onClick={() => signOut()}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
-        <div className="hidden lg:block">
+        <div className="hidden lg:flex items-center gap-3">
+          {userEmail && (
+            <span className="text-xs font-medium text-[#64748B] max-w-[180px] truncate">
+              {userEmail}
+            </span>
+          )}
+          <form action={signOut}>
+            <Button
+              type="submit"
+              variant="ghost"
+              size="sm"
+              className="text-[#64748B] hover:text-red-600"
+            >
+              <LogOut className="h-4 w-4 mr-1.5" />
+              Sign out
+            </Button>
+          </form>
           <LogTradeModal />
         </div>
       </div>
