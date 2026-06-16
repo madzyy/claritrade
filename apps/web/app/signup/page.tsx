@@ -21,7 +21,10 @@ export default function SignUpPage() {
   )
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950">
+    <div className="relative min-h-screen bg-white dark:bg-neutral-950">
+      <div className="absolute left-6 top-6 z-20 hidden lg:block">
+        <Logo theme="dark" width={180} height={54} priority />
+      </div>
       <div className="grid min-h-screen lg:grid-cols-2">
         <div className="relative hidden overflow-hidden bg-neutral-900 px-16 py-12 text-white lg:flex lg:flex-col lg:justify-end">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(59,130,246,0.35),transparent_38%),radial-gradient(circle_at_75%_0%,rgba(99,102,241,0.3),transparent_35%)]" />

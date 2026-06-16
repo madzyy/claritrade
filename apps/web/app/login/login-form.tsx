@@ -62,7 +62,7 @@ export function LoginForm({ redirectTo, callbackError }: LoginFormProps) {
         />
       </div>
 
-      <Button type="submit" className="w-full p-[24px]" disabled={isPending}>
+      <Button type="submit" className="w-full p-[23px] mt-[20px]" disabled={isPending}>
         {isPending ? "Signing in..." : "Sign in"}
       </Button>
       <p className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
