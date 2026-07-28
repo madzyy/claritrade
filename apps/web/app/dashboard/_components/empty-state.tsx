@@ -1,79 +1,79 @@
-import { Plus, Upload, Sparkles, BarChart2 } from "lucide-react"
-import { Button } from "@workspace/ui/components/button"
-import { Card, CardContent } from "@workspace/ui/components/card"
+import Link from "next/link"
+import { Layers, Clock, GitBranch, ArrowRight } from "lucide-react"
+import { cn } from "@workspace/ui/lib/utils"
+import { dashCard, dashLabel, dashTitle } from "@/lib/dashboard-theme"
 
 export function EmptyState() {
   return (
-    <div className="px-4 lg:px-8 pb-8">
-      <Card className="border-[#E2E8F0] shadow-none rounded-2xl flex flex-col items-center justify-center py-12 lg:py-20 bg-white">
-        <CardContent className="flex flex-col items-center text-center max-w-md w-full">
-          <div className="relative mb-6 lg:mb-8 scale-90 lg:scale-100">
-            <div className="w-64 h-40 bg-[#F8FAFC] rounded-xl border border-dashed border-[#CBD5E1] flex items-center justify-center overflow-hidden">
-               {/* Simplified Illustration */}
-               <div className="w-full h-full opacity-10 flex flex-col justify-end p-4 gap-2">
-                  <div className="h-1 bg-[#2563EB] w-[80%] rounded-full" />
-                  <div className="h-1 bg-[#2563EB] w-[60%] rounded-full" />
-                  <div className="h-1 bg-[#2563EB] w-[90%] rounded-full" />
-               </div>
-            </div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white p-4 rounded-2xl shadow-xl border border-[#E2E8F0]">
-              <BarChart2 className="h-10 w-10 text-[#CBD5E1]" />
-            </div>
+    <div className="mx-4 lg:mx-8">
+      <div className={cn(dashCard, "p-5 lg:p-6")}>
+        <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+          <div className="flex-1 space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
+              Get started
+            </p>
+            <h2 className={cn(dashTitle, "text-lg lg:text-xl")}>
+              Journal your first SMC / ICT setup
+            </h2>
+            <p className={cn(dashLabel, "text-sm max-w-xl leading-relaxed")}>
+              Log HTF bias, killzone, POI, OTE, and liquidity — then track which
+              models actually pay you.
+            </p>
           </div>
 
-          <h2 className="text-xl lg:text-2xl font-bold text-[#0F172A] mb-3 px-4">No trades yet</h2>
-          <p className="text-[#64748B] text-xs lg:text-sm mb-8 lg:mb-10 leading-relaxed px-6 lg:px-4">
-            Log your first trade or import existing data to see your performance analytics and trading insights.
-          </p>
-
-          <div className="flex flex-col lg:flex-row gap-3 lg:gap-4 mb-8 w-full px-6 lg:px-0">
-            <Button className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white gap-2 px-8 py-5 lg:py-6 rounded-xl font-semibold w-full lg:w-auto text-sm">
-              <Plus className="h-5 w-5" />
-              Log Trade
-            </Button>
-            <Button variant="outline" className="border-[#E2E8F0] text-[#0F172A] gap-2 px-8 py-5 lg:py-6 rounded-xl font-semibold hover:bg-[#F8FAFC] w-full lg:w-auto text-sm">
-              <Upload className="h-5 w-5" />
-              Import Data
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-2.5 shrink-0">
+            <span className="inline-flex items-center justify-center rounded-xl bg-[#2563EB] text-white text-sm font-semibold h-11 px-5">
+              Use + Log Trade above
+            </span>
+            <Link
+              href="/dashboard/import"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#E2E8F0] bg-white text-[#0F172A] text-sm font-semibold h-11 px-5 hover:bg-[#F8FAFC] transition-colors"
+            >
+              Import history
+              <ArrowRight className="h-4 w-4 text-[#2563EB]" />
+            </Link>
           </div>
+        </div>
 
-          <div className="bg-[#F5F3FF] text-[#7C3AED] px-5 lg:px-6 py-2.5 lg:py-3 rounded-full flex items-center gap-2 text-[10px] lg:text-sm font-medium mx-4">
-            <Sparkles className="h-4 w-4" />
-            AI Insights will appear here once data is available
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mt-10 lg:mt-12">
-        <FeatureItem 
-          icon={<BarChart2 className="h-5 w-5 text-[#2563EB]" />}
-          title="Equity Tracking"
-          description="Visualize your growth with precision-grade equity curves and drawdown analysis."
-        />
-        <FeatureItem 
-          icon={<div className="h-5 w-5 border-2 border-[#7C3AED] rounded-full flex items-center justify-center text-[10px] text-[#7C3AED] font-bold">P</div>}
-          title="Psychology Tags"
-          description="Master your mindset by tagging trades with emotional states and execution quality."
-        />
-        <FeatureItem 
-          icon={<div className="h-5 w-5 border-2 border-[#0F172A] rounded flex items-center justify-center text-[10px] text-[#0F172A] font-bold">M</div>}
-          title="Advanced Metrics"
-          description="Calculate Sharpe ratio, Profit factor, and Expectancy automatically for every session."
-        />
+        <div className="mt-6 pt-6 border-t border-[#E2E8F0] grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Tip
+            icon={<Clock className="h-4 w-4 text-[#2563EB]" />}
+            title="Trade the killzone"
+            body="NY AM and London Open are tagged automatically in NY time."
+          />
+          <Tip
+            icon={<Layers className="h-4 w-4 text-[#2563EB]" />}
+            title="Stack timeframes"
+            body="HTF bias → MTF structure → LTF entry model on every log."
+          />
+          <Tip
+            icon={<GitBranch className="h-4 w-4 text-[#2563EB]" />}
+            title="Name the model"
+            body="OB, OTE, breaker, mitigation, or liquidity sweep — then compare."
+          />
+        </div>
       </div>
     </div>
   )
 }
 
-function FeatureItem({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
+function Tip({
+  icon,
+  title,
+  body,
+}: {
+  icon: React.ReactNode
+  title: string
+  body: string
+}) {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="h-10 w-10 rounded-xl bg-white border border-[#E2E8F0] flex items-center justify-center shadow-sm">
+    <div className="flex gap-3">
+      <div className="h-9 w-9 rounded-lg bg-[#2563EB]/10 flex items-center justify-center shrink-0">
         {icon}
       </div>
-      <div className="space-y-1">
-        <h3 className="font-bold text-[#0F172A]">{title}</h3>
-        <p className="text-xs text-[#64748B] leading-relaxed">{description}</p>
+      <div>
+        <p className="text-sm font-semibold text-[#0F172A]">{title}</p>
+        <p className={cn(dashLabel, "mt-0.5 leading-relaxed")}>{body}</p>
       </div>
     </div>
   )

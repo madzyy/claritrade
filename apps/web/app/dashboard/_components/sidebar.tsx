@@ -3,10 +3,17 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutGrid, NotebookText, Upload, Settings, User, ChevronLeft, ChevronRight, Sparkles } from "lucide-react"
+import {
+  LayoutGrid,
+  NotebookText,
+  Upload,
+  Settings,
+  User,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react"
 import { cn } from "@workspace/ui/lib/utils"
-import { Button } from "@workspace/ui/components/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@workspace/ui/components/avatar"
 import { Logo } from "@/components/logo"
 
 const navItems = [
@@ -21,120 +28,141 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = React.useState(false)
 
   return (
-    <div 
+    <aside
       className={cn(
-        "relative hidden lg:flex h-full flex-col border-r bg-white p-4 transition-all duration-500 ease-in-out",
+        "relative hidden lg:flex h-full flex-col border-r border-[#E5E7EB] bg-white p-4 font-sans transition-all duration-500 ease-in-out",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
-      {/* Toggle Button */}
       <button
+        type="button"
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border bg-white text-[#64748B] shadow-md hover:text-[#2563EB] hover:scale-110 active:scale-95 transition-all duration-300 z-50"
+        className="absolute -right-3 top-20 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#64748B] shadow-sm hover:text-[#2563EB] transition-colors"
+        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
-      {/* Logo Section - Smooth Crossfade */}
-      <div className={cn(
-        "relative h-12 mb-10 flex items-center overflow-hidden transition-all duration-500",
-        isCollapsed ? "justify-center px-0" : "justify-start px-0"
-      )}>
-        <div className={cn(
-          "absolute transition-all duration-500 ease-in-out transform",
-          isCollapsed ? "opacity-0 scale-50 -translate-x-10" : "opacity-100 scale-100 translate-x-0"
-        )}>
+      <div
+        className={cn(
+          "relative mb-8 flex h-12 items-center overflow-hidden transition-all duration-500",
+          isCollapsed ? "justify-center" : "justify-start"
+        )}
+      >
+        <div
+          className={cn(
+            "absolute transition-all duration-500 ease-in-out",
+            isCollapsed
+              ? "pointer-events-none -translate-x-6 scale-90 opacity-0"
+              : "translate-x-0 scale-100 opacity-100"
+          )}
+        >
           <Logo theme="light" width={160} height={48} href={undefined} />
         </div>
-        <div className={cn(
-          "absolute transition-all duration-500 ease-in-out transform",
-          isCollapsed ? "opacity-100 scale-100 translate-x-0" : "opacity-0 scale-50 translate-x-10"
-        )}>
+        <div
+          className={cn(
+            "absolute transition-all duration-500 ease-in-out",
+            isCollapsed
+              ? "translate-x-0 scale-100 opacity-100"
+              : "pointer-events-none translate-x-6 scale-90 opacity-0"
+          )}
+        >
           <Logo variant="icon" width={40} height={40} href={undefined} />
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-2 mt-4">
+      <nav className="mt-2 flex-1 space-y-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
             <Link
               key={item.name}
               href={item.href}
-              title={isCollapsed ? item.name : ""}
+              title={isCollapsed ? item.name : undefined}
               className={cn(
-                "group relative flex items-center h-12 w-full rounded-md transition-all duration-500 ease-in-out",
-                isCollapsed ? "px-0 justify-center" : "px-4",
+                "group relative flex h-11 w-full items-center rounded-lg text-[14px] transition-colors",
+                isCollapsed ? "justify-center px-0" : "px-3",
                 isActive
-                  ? "bg-[#2563EB]/5 text-[#2563EB] shadow-sm"
-                  : "text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]"
+                  ? "bg-[#EFF6FF] text-[#2563EB]"
+                  : "text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#1E293B]"
               )}
             >
               {isActive && !isCollapsed && (
-                <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-[#2563EB] transition-all duration-500" />
+                <span className="absolute bottom-2 left-0 top-2 w-[3px] rounded-r bg-[#2563EB]" />
               )}
-              <item.icon className={cn(
-                "h-5 w-5 transition-all duration-500 shrink-0", 
-                isCollapsed ? "" : "mr-3",
-                isActive ? "text-[#2563EB]" : "text-[#64748B]",
-                "group-hover:scale-110"
-              )} />
-              <div className={cn(
-                "transition-all duration-500 ease-in-out overflow-hidden flex items-center",
-                isCollapsed ? "w-0 opacity-0 invisible" : "w-auto opacity-100 visible"
-              )}>
-                <span className={cn(
-                  "whitespace-nowrap",
-                  isActive ? "font-bold tracking-tight" : "font-medium"
-                )}>
-                  {item.name}
-                </span>
-              </div>
+              <item.icon
+                className={cn(
+                  "h-[18px] w-[18px] shrink-0",
+                  !isCollapsed && "mr-3",
+                  isActive ? "text-[#2563EB]" : "text-[#94A3B8]"
+                )}
+              />
+              <span
+                className={cn(
+                  "overflow-hidden whitespace-nowrap transition-all duration-300",
+                  isCollapsed
+                    ? "w-0 opacity-0"
+                    : "w-auto opacity-100",
+                  isActive ? "font-semibold" : "font-medium"
+                )}
+              >
+                {item.name}
+              </span>
             </Link>
           )
         })}
       </nav>
 
-      {/* Footer Section - Premium Overhaul */}
-      <div className="mt-auto pt-6 flex flex-col gap-6">
+      <div className="mt-auto flex flex-col gap-4 pt-6">
         {!isCollapsed ? (
-          <div className="bg-[#2563EB] rounded-2xl p-5 mb-2 text-white relative overflow-hidden group shadow-lg shadow-[#2563EB]/20">
+          <div className="relative overflow-hidden rounded-xl bg-[#2563EB] p-4 text-white">
             <div className="relative z-10">
-              <h4 className="font-bold text-sm mb-1">Upgrade to Pro</h4>
-              <p className="text-[10px] text-blue-100/80 leading-relaxed mb-4">
-                Access advanced analytics and unlimited logs.
+              <p className="mb-1 text-[13px] font-semibold">Upgrade to Pro</p>
+              <p className="mb-3 text-[11px] font-normal leading-relaxed text-blue-100/90">
+                Advanced analytics and unlimited logs.
               </p>
-              <button className="w-full bg-white/10 hover:bg-white/20 transition-colors py-2 rounded-lg text-[10px] font-bold">
-                Learn More
+              <button
+                type="button"
+                className="w-full rounded-lg bg-white/15 py-2 text-[12px] font-semibold transition-colors hover:bg-white/25"
+              >
+                Learn more
               </button>
             </div>
-            {/* Decorative background shapes */}
-            <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500" />
-            <div className="absolute -left-8 -top-8 w-20 h-20 bg-blue-400/20 rounded-full blur-xl group-hover:translate-x-4 transition-transform duration-500" />
           </div>
         ) : (
-          <button className="h-12 w-12 mx-auto flex items-center justify-center bg-[#2563EB] text-white rounded-full shadow-lg shadow-[#2563EB]/20 hover:scale-105 transition-transform active:scale-95">
-            <Sparkles size={20} />
+          <button
+            type="button"
+            className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#2563EB] text-white"
+            aria-label="Upgrade to Pro"
+          >
+            <Sparkles size={18} />
           </button>
         )}
-        
-        <div className={cn(
-          "flex items-center transition-all duration-500",
-          isCollapsed ? "justify-center" : "px-2"
-        )}>
-          <div className="h-10 w-10 rounded-full bg-[#2563EB] flex items-center justify-center text-white shadow-md border-2 border-white shrink-0 transition-transform duration-300 hover:scale-105">
-            <User className="h-6 w-6" />
+
+        <div
+          className={cn(
+            "flex items-center",
+            isCollapsed ? "justify-center" : "gap-3 px-1"
+          )}
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2563EB] text-white">
+            <User className="h-4 w-4" />
           </div>
-          <div className={cn(
-            "flex flex-col ml-3 transition-all duration-500 overflow-hidden",
-            isCollapsed ? "w-0 opacity-0 invisible" : "w-auto opacity-100 visible"
-          )}>
-            <span className="text-sm font-bold text-[#1E293B] whitespace-nowrap leading-none mb-1">Alex Rivers</span>
-            <span className="text-[10px] font-medium text-[#94A3B8] whitespace-nowrap">Pro Member</span>
+          <div
+            className={cn(
+              "min-w-0 overflow-hidden transition-all duration-300",
+              isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+            )}
+          >
+            <p className="truncate text-[13px] font-semibold leading-tight text-[#1E293B]">
+              Alex Rivers
+            </p>
+            <p className="mt-0.5 truncate text-[11px] font-medium text-[#94A3B8]">
+              Pro Member
+            </p>
           </div>
         </div>
       </div>
-    </div>
+    </aside>
   )
 }

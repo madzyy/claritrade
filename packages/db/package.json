@@ -7,6 +7,7 @@
   "scripts": {
     "build": "prisma generate --schema=./prisma/schema.prisma",
     "generate": "prisma generate --schema=./prisma/schema.prisma",
+    "seed": "tsx prisma/seed.ts",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"
@@ -21,8 +22,10 @@
     "@types/pg": "^8.20.0",
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
+    "dotenv": "^17.4.2",
     "eslint": "^9.39.2",
     "prisma": "^7.8.0",
+    "tsx": "^4.23.1",
     "typescript": "^5.9.3"
   },
   "exports": {

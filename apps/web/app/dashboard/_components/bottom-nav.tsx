@@ -34,8 +34,8 @@ export function BottomNav() {
               isActive && "scale-110"
             )} />
             <span className={cn(
-              "text-[10px] font-bold tracking-tight",
-              isActive ? "text-[#2563EB]" : "text-[#94A3B8]"
+              "text-[10px] font-medium tracking-tight",
+              isActive ? "font-semibold text-[#2563EB]" : "text-[#94A3B8]"
             )}>
               {item.name}
             </span>

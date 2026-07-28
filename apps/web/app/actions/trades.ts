@@ -1,10 +1,60 @@
 "use server"
 
 import { getOrCreatePrismaUser } from "@/lib/auth"
+import { getActiveJournal } from "@/lib/journals"
+import {
+  calculateOteZone,
+  calculateTradeMetrics,
+  killzoneToSession,
+  normalizePair,
+  resolveRiskDollars,
+  type KillzoneId,
+  type TradeDirection,
+} from "@/lib/trading"
 import { prisma } from "@workspace/db"
 import { revalidatePath } from "next/cache"
 
-export async function logTrade(formData: any) {
+export type LogTradeInput = {
+  pair: string
+  direction: string
+  entry: string | number
+  exit?: string | number | null
+  stopLoss: string | number
+  takeProfit?: string | number | null
+  lotSize: string | number
+  accountBalance?: string | number | null
+  risk?: string | number | null
+  riskType?: "percent" | "amount"
+  psychologyNote?: string | null
+  tags?: string[]
+  screenshotUrls?: string[]
+  setupType?: string | null
+  poiHigh?: string | number | null
+  poiLow?: string | number | null
+  swingHigh?: string | number | null
+  swingLow?: string | number | null
+  liquiditySide?: string | null
+  liquidityTaken?: boolean
+  mssConfirmed?: boolean
+  htfTimeframe?: string | null
+  htfBias?: string | null
+  htfNarrative?: string | null
+  mtfTimeframe?: string | null
+  mtfNarrative?: string | null
+  ltfTimeframe?: string | null
+  entryModel?: string | null
+  dateOpened?: string | null
+  killzone?: string | null
+  session?: string | null
+}
+
+function num(v: string | number | null | undefined): number | null {
+  if (v === "" || v == null) return null
+  const n = typeof v === "number" ? v : parseFloat(v)
+  return Number.isFinite(n) ? n : null
+}
+
+export async function logTrade(formData: LogTradeInput) {
   try {
     const user = await getOrCreatePrismaUser()
 
@@ -12,79 +62,151 @@ export async function logTrade(formData: any) {
       return { success: false, error: "You must be signed in to log a trade." }
     }
 
-    const entry = parseFloat(formData.entry)
-    const stopLoss = parseFloat(formData.stopLoss)
-    const takeProfit = formData.takeProfit ? parseFloat(formData.takeProfit) : null
-    const exit = formData.exit ? parseFloat(formData.exit) : null
-    const lotSize = parseFloat(formData.lotSize)
-    const direction = formData.direction.toLowerCase()
-    const pair = formData.pair.toUpperCase()
+    const journal = await getActiveJournal(user)
 
-    // 1. Calculate RR Ratio (Potential)
-    let rr = null
-    if (takeProfit) {
-      const risk = Math.abs(entry - stopLoss)
-      const reward = Math.abs(takeProfit - entry)
-      if (risk > 0) {
-        rr = reward / risk
+    const entry = num(formData.entry)
+    const stopLoss = num(formData.stopLoss)
+    const takeProfit = num(formData.takeProfit)
+    const exit = num(formData.exit)
+    const lotSize = num(formData.lotSize)
+    const directionRaw = (formData.direction || "buy").toLowerCase()
+    const direction: TradeDirection =
+      directionRaw === "sell" || directionRaw === "short" ? "sell" : "buy"
+    const pair = normalizePair(formData.pair)
+
+    if (entry == null || stopLoss == null || lotSize == null || !pair) {
+      return {
+        success: false,
+        error: "Pair, entry, stop loss, and lot size are required.",
       }
     }
 
-    // 2. Calculate Outcome and Result ($) if Exit is provided
-    let outcome = "PENDING"
-    let resultAmount = null
+    if (entry === stopLoss) {
+      return { success: false, error: "Stop loss cannot equal entry." }
+    }
 
-    if (exit) {
-      const points = direction === "buy" ? (exit - entry) : (entry - exit)
-      outcome = points > 0 ? "WIN" : points < 0 ? "LOSS" : "BREAK EVEN"
-      
-      // Fixed Multiplier Logic:
-      let multiplier = 100 // Default (Gold)
-      
-      if (pair.includes("JPY")) {
-        multiplier = 1000 // JPY pairs (3 decimals): 0.01 = 1 pip
-      } else if (pair.includes("XAU") || pair.includes("GOLD")) {
-        multiplier = 100 // Gold: 1.00 move = $100 per lot
-      } else if (pair.includes("BTC") || pair.includes("ETH")) {
-        multiplier = 1 // Crypto: 1.00 move = $1 per lot
-      } else if (pair.includes("NAS") || pair.includes("US30") || pair.includes("SPX") || pair.includes("GER")) {
-        multiplier = 1 // Indices: 1.00 point = $1 per lot
-      } else {
-        // Standard Forex (5 decimals): EURUSD, GBPUSD, etc.
-        // 0.00010 = 1 pip. 1 lot = $10 per pip. 
-        // 0.00010 * 1 lot * 100,000 = $10.
-        multiplier = 100000 
+    const metrics = calculateTradeMetrics({
+      pair,
+      direction,
+      entry,
+      stopLoss,
+      takeProfit,
+      exit,
+      lotSize,
+    })
+
+    const dateOpened = formData.dateOpened
+      ? new Date(formData.dateOpened)
+      : new Date()
+
+    if (!formData.killzone) {
+      return {
+        success: false,
+        error:
+          "Select the ICT killzone you traded (manual — not inferred from journal time).",
       }
-      
-      resultAmount = points * lotSize * multiplier
+    }
+    const killzone = formData.killzone as KillzoneId
+    const session =
+      formData.session ||
+      killzoneToSession(killzone === "OUTSIDE" ? "NY_AM" : killzone)
+
+    const swingHigh = num(formData.swingHigh)
+    const swingLow = num(formData.swingLow)
+    let oteHigh = null as number | null
+    let oteLow = null as number | null
+
+    if (swingHigh != null && swingLow != null) {
+      const ote = calculateOteZone(direction, swingHigh, swingLow)
+      if (ote) {
+        oteHigh = ote.oteHigh
+        oteLow = ote.oteLow
+      }
+    }
+
+    const balance = num(formData.accountBalance)
+    const riskVal = num(formData.risk)
+    let riskAmount = metrics.riskAmount
+    let riskPercent: number | null = null
+
+    if (balance != null && riskVal != null && formData.riskType) {
+      riskAmount = resolveRiskDollars({
+        balance,
+        riskValue: riskVal,
+        riskType: formData.riskType,
+      })
+      riskPercent =
+        formData.riskType === "percent"
+          ? riskVal
+          : balance > 0
+            ? (riskAmount / balance) * 100
+            : null
+    } else if (balance != null && balance > 0) {
+      riskPercent = (riskAmount / balance) * 100
     }
 
     const trade = await prisma.trade.create({
       data: {
         userId: user.id,
-        pair: pair,
+        journalId: journal.id,
+        pair,
         direction: direction.toUpperCase(),
-        entry: entry,
-        exit: exit,
-        stopLoss: stopLoss,
-        takeProfit: takeProfit,
-        lotSize: lotSize,
-        rr: rr,
-        result: resultAmount,
-        outcome: outcome,
-        session: formData.session,
+        entry,
+        exit,
+        stopLoss,
+        takeProfit,
+        lotSize,
+        rr: metrics.plannedRr,
+        rMultiple: metrics.rMultiple,
+        result: metrics.result,
+        outcome: metrics.outcome,
+        session,
+        killzone,
         tags: formData.tags || [],
-        psychologyNote: formData.psychologyNote,
+        psychologyNote: formData.psychologyNote || null,
         screenshotUrls: formData.screenshotUrls || [],
-        dateOpened: new Date(),
-        dateClosed: exit ? new Date() : null,
+        accountBalance: balance,
+        riskAmount,
+        riskPercent,
+        setupType: formData.setupType || null,
+        poiHigh: num(formData.poiHigh),
+        poiLow: num(formData.poiLow),
+        swingHigh,
+        swingLow,
+        oteHigh,
+        oteLow,
+        liquiditySide: formData.liquiditySide || null,
+        liquidityTaken: Boolean(formData.liquidityTaken),
+        mssConfirmed: Boolean(formData.mssConfirmed),
+        htfTimeframe: formData.htfTimeframe || null,
+        htfBias: formData.htfBias || null,
+        htfNarrative: formData.htfNarrative || null,
+        mtfTimeframe: formData.mtfTimeframe || null,
+        mtfNarrative: formData.mtfNarrative || null,
+        ltfTimeframe: formData.ltfTimeframe || null,
+        entryModel: formData.entryModel || null,
+        dateOpened,
+        dateClosed: exit != null ? dateOpened : null,
       },
     })
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/trades")
     return { success: true, trade }
   } catch (error) {
     console.error("Failed to log trade:", error)
     return { success: false, error: "Failed to log trade" }
   }
+}
+
+export async function getUserTrades() {
+  const user = await getOrCreatePrismaUser()
+  if (!user) return []
+
+  const journal = await getActiveJournal(user)
+
+  return prisma.trade.findMany({
+    where: { userId: user.id, journalId: journal.id },
+    orderBy: { dateOpened: "desc" },
+  })
 }

@@ -7,17 +7,35 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   name      String?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   trades    Trade[]
+  journals  Journal[]
+}
+
+model Journal {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  description String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  trades      Trade[]
+
+  @@unique([userId, name])
+  @@index([userId])
 }
 
 model Trade {
   id             String   @id @default(cuid())
   userId         String
   user           User     @relation(fields: [userId], references: [id])
+  journalId      String
+  journal        Journal  @relation(fields: [journalId], references: [id], onDelete: Cascade)
   pair           String
   direction      String
   entry          Float
@@ -25,19 +43,55 @@ model Trade {
   stopLoss       Float
   takeProfit     Float?
   lotSize        Float
+  /// Planned reward:risk at entry
   rr             Float?
+  /// Realized R-multiple vs stop distance
+  rMultiple      Float?
   result         Float?
   outcome        String?
   session        String?
+  /// ICT killzone id (ASIAN, LONDON_OPEN, NY_AM, ...)
+  killzone       String?
   tags           String[]
   psychologyNote String?
   screenshotUrls String[] @default([])
+
+  // Risk management
+  accountBalance Float?
+  riskAmount     Float?
+  riskPercent    Float?
+
+  // SMC / ICT setup
+  setupType      String?
+  poiHigh        Float?
+  poiLow         Float?
+  swingHigh      Float?
+  swingLow       Float?
+  oteHigh        Float?
+  oteLow         Float?
+  liquiditySide  String?
+  liquidityTaken Boolean  @default(false)
+  mssConfirmed   Boolean  @default(false)
+
+  // Multi-timeframe analysis
+  htfTimeframe   String?
+  htfBias        String?
+  htfNarrative   String?
+  mtfTimeframe   String?
+  mtfNarrative   String?
+  ltfTimeframe   String?
+  entryModel     String?
+
   dateOpened     DateTime
   dateClosed     DateTime?
   createdAt      DateTime @default(now())
-  
+  updatedAt      DateTime @default(now()) @updatedAt
+
   @@index([userId])
+  @@index([journalId])
   @@index([dateOpened])
+  @@index([setupType])
+  @@index([killzone])
 }
 
 model NewsEvent {
