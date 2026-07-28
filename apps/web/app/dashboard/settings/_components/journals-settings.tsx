@@ -137,7 +137,7 @@ export function JournalsSettings({ journals, activeJournalId }: Props) {
         </Button>
       </div>
 
-      <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:divide-white/5 dark:border-white/10 dark:bg-neutral-900">
         {journals.map((j) => {
           const isActive = j.id === activeJournalId
           return (
@@ -145,16 +145,16 @@ export function JournalsSettings({ journals, activeJournalId }: Props) {
               key={j.id}
               className={cn(
                 "flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between",
-                isActive && "bg-[#EFF6FF]/40"
+                isActive && "bg-[#EFF6FF]/40 dark:bg-blue-500/10"
               )}
             >
               <div className="min-w-0 flex items-start gap-3">
-                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFF6FF] text-[#2563EB]">
+                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EFF6FF] text-[#2563EB] dark:bg-blue-500/15 dark:text-blue-400">
                   <BookOpen className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate font-semibold text-[#1E293B]">
+                    <p className="truncate font-semibold text-[#1E293B] dark:text-slate-100">
                       {j.name}
                     </p>
                     {isActive && (

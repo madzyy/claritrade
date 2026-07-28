@@ -86,9 +86,9 @@ export function JournalSwitcher({ journals, activeJournalId }: Props) {
             disabled={pending}
             className="h-9 px-0 text-sm font-medium text-[#64748B] hover:bg-transparent border-none bg-transparent gap-2 transition-all rounded-lg outline-none ring-0"
           >
-            <span className="flex items-center gap-2 border px-3 py-1.5 rounded-lg bg-white shadow-none max-w-[220px]">
-              <BookOpen className="h-3.5 w-3.5 shrink-0 text-[#2563EB]" />
-              <span className="truncate font-semibold text-[#1E293B]">
+            <span className="flex items-center gap-2 border border-slate-200 px-3 py-1.5 rounded-lg bg-white shadow-none max-w-[220px] dark:border-white/10 dark:bg-neutral-900">
+              <BookOpen className="h-3.5 w-3.5 shrink-0 text-[#2563EB] dark:text-blue-400" />
+              <span className="truncate font-semibold text-[#1E293B] dark:text-slate-100">
                 {active?.name ?? "Journal"}
               </span>
               <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" />

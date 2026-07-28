@@ -35,8 +35,8 @@ export function SessionStrip() {
       )}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <div className="h-9 w-9 rounded-lg bg-[#2563EB]/10 flex items-center justify-center shrink-0">
-          <Clock className="h-4 w-4 text-[#2563EB]" />
+        <div className="h-9 w-9 rounded-lg bg-[#2563EB]/10 flex items-center justify-center shrink-0 dark:bg-blue-500/15">
+          <Clock className="h-4 w-4 text-[#2563EB] dark:text-blue-400" />
         </div>
         <div className="min-w-0">
           <p className={cn(dashLabel, "text-[10px] uppercase tracking-[0.12em] font-semibold")}>
@@ -50,7 +50,7 @@ export function SessionStrip() {
           className={cn(
             "ml-auto lg:ml-2 shrink-0 border-none text-[10px] font-semibold",
             kz.id === "OUTSIDE"
-              ? "bg-[#F8FAFC] text-[#64748B]"
+              ? "bg-[#F8FAFC] text-[#64748B] dark:bg-white/5 dark:text-slate-400"
               : "bg-[#2563EB] text-white"
           )}
         >
@@ -58,7 +58,7 @@ export function SessionStrip() {
         </Badge>
       </div>
 
-      <div className="hidden lg:block h-8 w-px bg-[#E2E8F0] shrink-0" />
+      <div className="hidden lg:block h-8 w-px bg-[#E2E8F0] shrink-0 dark:bg-white/10" />
 
       <div className="flex-1 flex items-center gap-1.5 overflow-x-auto">
         {KILLZONES.map((zone) => {
@@ -70,22 +70,24 @@ export function SessionStrip() {
               className={cn(
                 "flex flex-col gap-1.5 min-w-[72px] rounded-lg px-2.5 py-2 border transition-colors",
                 active
-                  ? "border-[#2563EB]/30 bg-[#2563EB]/10"
-                  : "border-[#E2E8F0] bg-[#F8FAFC]"
+                  ? "border-[#2563EB]/30 bg-[#2563EB]/10 dark:border-blue-400/30 dark:bg-blue-500/15"
+                  : "border-[#E2E8F0] bg-[#F8FAFC] dark:border-white/10 dark:bg-white/[0.03]"
               )}
             >
               <span
                 className={cn(
                   "text-[9px] font-semibold uppercase tracking-wide truncate",
-                  active ? "text-[#2563EB]" : "text-[#94A3B8]"
+                  active
+                    ? "text-[#2563EB] dark:text-blue-400"
+                    : "text-[#94A3B8] dark:text-slate-500"
                 )}
               >
                 {SHORT[zone.id] ?? zone.label}
               </span>
-              <div className="h-1 rounded-full bg-[#E2E8F0] overflow-hidden">
+              <div className="h-1 rounded-full bg-[#E2E8F0] overflow-hidden dark:bg-white/10">
                 <div
                   className={cn(
-                    "h-full rounded-full bg-[#2563EB] transition-all",
+                    "h-full rounded-full bg-[#2563EB] transition-all dark:bg-blue-400",
                     active ? "w-full" : "w-0"
                   )}
                 />
