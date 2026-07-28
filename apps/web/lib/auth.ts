@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { prisma } from "@workspace/db"
 import type { User } from "@workspace/db"
+import { ensureDefaultJournal } from "@/lib/journals"
 
 export async function getSessionUser() {
   const supabase = await createClient()
@@ -24,7 +25,7 @@ export async function getOrCreatePrismaUser(): Promise<User | null> {
     (authUser.user_metadata?.name as string | undefined) ??
     authUser.email.split("@")[0]
 
-  return prisma.user.upsert({
+  const user = await prisma.user.upsert({
     where: { email: authUser.email },
     update: { name },
     create: {
@@ -32,4 +33,7 @@ export async function getOrCreatePrismaUser(): Promise<User | null> {
       name,
     },
   })
+
+  await ensureDefaultJournal(user.id)
+  return user
 }
