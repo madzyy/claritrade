@@ -11,10 +11,21 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Sparkles,
+  LogOut,
+  Mail,
 } from "lucide-react"
 import { cn } from "@workspace/ui/lib/utils"
 import { Logo } from "@/components/logo"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu"
+import { signOut } from "@/app/actions/auth"
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutGrid },
@@ -23,21 +34,37 @@ const navItems = [
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
-export function Sidebar() {
+type SidebarProps = {
+  userEmail?: string | null
+  userName?: string | null
+}
+
+function displayName(email?: string | null, name?: string | null) {
+  if (name?.trim()) return name.trim()
+  if (!email) return "Trader"
+  const local = email.split("@")[0] ?? "Trader"
+  return local
+    .replace(/[._-]+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+export function Sidebar({ userEmail, userName }: SidebarProps) {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = React.useState(false)
+  const [accountOpen, setAccountOpen] = React.useState(false)
+  const name = displayName(userEmail, userName)
 
   return (
     <aside
       className={cn(
-        "relative hidden lg:flex h-full flex-col border-r border-[#E5E7EB] bg-white p-4 font-sans transition-all duration-500 ease-in-out",
+        "relative hidden h-full flex-col border-r border-[#E5E7EB] bg-white p-4 font-sans transition-all duration-500 ease-in-out lg:flex dark:border-white/10 dark:bg-neutral-900",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
       <button
         type="button"
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-20 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#64748B] shadow-sm hover:text-[#2563EB] transition-colors"
+        className="absolute -right-3 top-20 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#64748B] shadow-sm transition-colors hover:text-[#2563EB] dark:border-white/10 dark:bg-neutral-900 dark:text-slate-400 dark:hover:text-blue-400"
         aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -57,7 +84,7 @@ export function Sidebar() {
               : "translate-x-0 scale-100 opacity-100"
           )}
         >
-          <Logo theme="light" width={160} height={48} href={undefined} />
+          <Logo theme="auto" width={160} height={48} href={undefined} />
         </div>
         <div
           className={cn(
@@ -83,26 +110,26 @@ export function Sidebar() {
                 "group relative flex h-11 w-full items-center rounded-lg text-[14px] transition-colors",
                 isCollapsed ? "justify-center px-0" : "px-3",
                 isActive
-                  ? "bg-[#EFF6FF] text-[#2563EB]"
-                  : "text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#1E293B]"
+                  ? "bg-[#EFF6FF] text-[#2563EB] dark:bg-blue-500/15 dark:text-blue-400"
+                  : "text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#1E293B] dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
               )}
             >
               {isActive && !isCollapsed && (
-                <span className="absolute bottom-2 left-0 top-2 w-[3px] rounded-r bg-[#2563EB]" />
+                <span className="absolute bottom-2 left-0 top-2 w-[3px] rounded-r bg-[#2563EB] dark:bg-blue-400" />
               )}
               <item.icon
                 className={cn(
                   "h-[18px] w-[18px] shrink-0",
                   !isCollapsed && "mr-3",
-                  isActive ? "text-[#2563EB]" : "text-[#94A3B8]"
+                  isActive
+                    ? "text-[#2563EB] dark:text-blue-400"
+                    : "text-[#94A3B8] dark:text-slate-500"
                 )}
               />
               <span
                 className={cn(
                   "overflow-hidden whitespace-nowrap transition-all duration-300",
-                  isCollapsed
-                    ? "w-0 opacity-0"
-                    : "w-auto opacity-100",
+                  isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100",
                   isActive ? "font-semibold" : "font-medium"
                 )}
               >
@@ -139,29 +166,78 @@ export function Sidebar() {
           </button>
         )}
 
-        <div
-          className={cn(
-            "flex items-center",
-            isCollapsed ? "justify-center" : "gap-3 px-1"
-          )}
-        >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2563EB] text-white">
-            <User className="h-4 w-4" />
-          </div>
-          <div
-            className={cn(
-              "min-w-0 overflow-hidden transition-all duration-300",
-              isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-            )}
+        <DropdownMenu open={accountOpen} onOpenChange={setAccountOpen}>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                "flex w-full items-center rounded-xl p-1.5 text-left transition-colors hover:bg-[#F8FAFC] outline-none dark:hover:bg-white/5",
+                isCollapsed ? "justify-center" : "gap-3",
+                accountOpen && "bg-[#F8FAFC] dark:bg-white/5"
+              )}
+              aria-label="Account menu"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2563EB] text-white">
+                <User className="h-4 w-4" />
+              </div>
+              <div
+                className={cn(
+                  "min-w-0 flex-1 overflow-hidden transition-all duration-300",
+                  isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+                )}
+              >
+                <p className="truncate text-[13px] font-semibold leading-tight text-[#1E293B] dark:text-slate-100">
+                  {name}
+                </p>
+                <p className="mt-0.5 truncate text-[11px] font-medium text-[#94A3B8] dark:text-slate-500">
+                  {userEmail ?? "Account"}
+                </p>
+              </div>
+              {!isCollapsed && (
+                <ChevronUp
+                  className={cn(
+                    "mr-1 h-4 w-4 shrink-0 text-slate-400 transition-transform",
+                    !accountOpen && "rotate-180"
+                  )}
+                />
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side="top"
+            align={isCollapsed ? "center" : "start"}
+            sideOffset={8}
+            className="w-64 rounded-xl border-slate-200 p-0 dark:border-white/10 dark:bg-neutral-900"
           >
-            <p className="truncate text-[13px] font-semibold leading-tight text-[#1E293B]">
-              Alex Rivers
-            </p>
-            <p className="mt-0.5 truncate text-[11px] font-medium text-[#94A3B8]">
-              Pro Member
-            </p>
-          </div>
-        </div>
+            <div className="border-b border-slate-100 px-3.5 py-3 dark:border-white/10">
+              <p className="text-[13px] font-semibold text-[#1E293B] dark:text-slate-100">
+                {name}
+              </p>
+              {userEmail ? (
+                <p className="mt-1 flex items-start gap-1.5 text-[12px] text-slate-500 dark:text-slate-400">
+                  <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span className="break-all">{userEmail}</span>
+                </p>
+              ) : null}
+            </div>
+            <div className="p-1.5">
+              <DropdownMenuItem asChild className="cursor-pointer rounded-lg">
+                <Link href="/dashboard/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer rounded-lg text-red-600 focus:bg-red-50 focus:text-red-600 dark:text-red-400 dark:focus:bg-red-500/10 dark:focus:text-red-400"
+                onClick={() => void signOut()}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </DropdownMenuItem>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   )

@@ -3,6 +3,7 @@ import { Header } from "./_components/header"
 import { BottomNav } from "./_components/bottom-nav"
 import { getOrCreatePrismaUser } from "@/lib/auth"
 import { getActiveJournal, listJournalsForUser } from "@/lib/journals"
+import { dashCanvas } from "@/lib/dashboard-theme"
 
 export default async function DashboardLayout({
   children,
@@ -15,11 +16,10 @@ export default async function DashboardLayout({
   const active = user ? await getActiveJournal(user) : null
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC]">
-      <Sidebar />
+    <div className={`flex h-screen ${dashCanvas}`}>
+      <Sidebar userEmail={user?.email} userName={user?.name} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header
-          userEmail={user?.email}
           journals={journals.map((j) => ({
             id: j.id,
             name: j.name,
@@ -29,7 +29,7 @@ export default async function DashboardLayout({
           activeJournalId={active?.id ?? null}
         />
         <main className="flex-1 overflow-y-auto pb-20 lg:pb-0">{children}</main>
-        <BottomNav />
+        <BottomNav userEmail={user?.email} userName={user?.name} />
       </div>
     </div>
   )

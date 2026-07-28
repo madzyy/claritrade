@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { useTheme } from "next-themes"
 import {
   Check,
   Compass,
@@ -10,8 +9,6 @@ import {
   Clock,
   ChevronDown,
   HelpCircle,
-  Moon,
-  Sun,
   Zap,
   Play,
   Menu,
@@ -22,6 +19,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Badge } from "@workspace/ui/components/badge"
 import { DashboardMockup } from "@/components/dashboard-mockup"
 import { Logo } from "@/components/logo"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@workspace/ui/lib/utils"
 
 function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -73,16 +71,9 @@ const navLinks = [
 ]
 
 export default function Page() {
-  const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
   const [activeFaq, setActiveFaq] = useState<number | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-
-  // Prevent hydration mismatch for client-side theme switcher
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 0)
@@ -90,10 +81,6 @@ export default function Page() {
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
-
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === "dark" ? "light" : "dark")
-  }
 
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index)
@@ -126,19 +113,7 @@ export default function Page() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {mounted && (
-              <button
-                onClick={toggleTheme}
-                className="hidden rounded-full p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 sm:inline-flex dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
-                aria-label="Toggle theme"
-              >
-                {resolvedTheme === "dark" ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-              </button>
-            )}
+            <ThemeToggle variant="marketing" className="hidden sm:inline-flex" />
             <Link
               href="/login"
               className="hidden text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:inline dark:text-neutral-400 dark:hover:text-white"
@@ -181,6 +156,12 @@ export default function Page() {
                 </a>
               ))}
               <div className="mt-3 flex flex-col gap-2 border-t border-neutral-900/[0.06] pt-3 dark:border-white/[0.06]">
+                <div className="flex items-center justify-between px-3 py-1">
+                  <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Theme
+                  </span>
+                  <ThemeToggle variant="marketing" />
+                </div>
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}

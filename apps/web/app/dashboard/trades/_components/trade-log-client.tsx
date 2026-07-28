@@ -212,8 +212,13 @@ export function TradeLogClient({ trades }: { trades: SerializedTrade[] }) {
       <div className="mx-4 lg:mx-8 flex items-center justify-between">
         <div className="text-[12px] text-[#64748B]">
           Showing{" "}
-          <span className="font-semibold text-[#1E293B]">{pageRows.length}</span> of{" "}
-          <span className="font-semibold text-[#1E293B]">{filtered.length}</span>{" "}
+          <span className="font-semibold text-[#1E293B] dark:text-slate-100">
+            {pageRows.length}
+          </span>{" "}
+          of{" "}
+          <span className="font-semibold text-[#1E293B] dark:text-slate-100">
+            {filtered.length}
+          </span>{" "}
           trades
         </div>
         <div className="flex items-center gap-1">

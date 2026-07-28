@@ -22,12 +22,12 @@ export function TableSection({
   return (
     <section className={cn("mx-4 lg:mx-8", className)}>
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h3 className="text-[15px] font-semibold tracking-tight text-[#1E293B]">
+        <h3 className="text-[15px] font-semibold tracking-tight text-[#1E293B] dark:text-slate-100">
           {title}
         </h3>
         {action}
       </div>
-      <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white">
+      <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white dark:border-white/10 dark:bg-neutral-900">
         {children}
       </div>
     </section>
@@ -43,14 +43,14 @@ export function TableHeader({
     <div
       className={cn(
         METRICS_GRID,
-        "hidden border-b border-[#F1F5F9] px-5 py-3 lg:grid lg:px-6"
+        "hidden border-b border-[#F1F5F9] px-5 py-3 lg:grid lg:px-6 dark:border-white/5"
       )}
     >
       <div />
       {columns.map((col) => (
         <div
           key={col}
-          className="text-right text-[12px] font-medium text-[#94A3B8]"
+          className="text-right text-[12px] font-medium text-[#94A3B8] dark:text-slate-500"
         >
           {col}
         </div>
@@ -73,8 +73,8 @@ export function TableRow({
       onClick={onClick}
       className={cn(
         METRICS_GRID,
-        "items-center border-b border-[#F1F5F9] px-5 py-[18px] last:border-b-0 lg:px-6",
-        "hover:bg-[#F8FAFC]/80 transition-colors",
+        "items-center border-b border-[#F1F5F9] px-5 py-[18px] last:border-b-0 lg:px-6 dark:border-white/5",
+        "hover:bg-[#F8FAFC]/80 transition-colors dark:hover:bg-white/[0.03]",
         onClick && "cursor-pointer",
         className
       )}
@@ -93,11 +93,11 @@ export function TableLabel({
 }) {
   return (
     <div className="min-w-0 pr-2 mb-3 lg:mb-0">
-      <div className="truncate text-[14px] font-semibold text-[#1E293B] leading-5">
+      <div className="truncate text-[14px] font-semibold text-[#1E293B] leading-5 dark:text-slate-100">
         {title}
       </div>
       {subtitle ? (
-        <div className="mt-0.5 truncate text-[12px] font-normal text-[#94A3B8] leading-4">
+        <div className="mt-0.5 truncate text-[12px] font-normal text-[#94A3B8] leading-4 dark:text-slate-500">
           {subtitle}
         </div>
       ) : null}
@@ -117,13 +117,13 @@ export function TableCell({
   return (
     <div className="flex items-center justify-between gap-3 lg:block lg:text-right">
       {label ? (
-        <span className="text-[12px] font-medium text-[#94A3B8] lg:hidden">
+        <span className="text-[12px] font-medium text-[#94A3B8] lg:hidden dark:text-slate-500">
           {label}
         </span>
       ) : null}
       <div
         className={cn(
-          "text-[14px] font-semibold tabular-nums text-[#1E293B] leading-5",
+          "text-[14px] font-semibold tabular-nums leading-5 text-[#1E293B] dark:text-slate-100",
           className
         )}
       >
@@ -157,7 +157,9 @@ export function formatPf(n: number | null | undefined) {
 }
 
 export function pnlClass(n: number | null | undefined) {
-  if (n == null || n === 0) return "text-[#1E293B]"
-  if (n > 0) return "text-[#3B82F6]"
-  return "text-[#EF4444]"
+  if (n == null || n === 0) {
+    return "text-[#1E293B] dark:text-slate-100"
+  }
+  if (n > 0) return "text-[#3B82F6] dark:text-blue-400"
+  return "text-[#EF4444] dark:text-red-400"
 }
