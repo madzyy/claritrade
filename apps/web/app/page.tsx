@@ -53,7 +53,7 @@ const faqs = [
   },
   {
     question: "Is my trading data secure and confidential?",
-    answer: "Absolutely. We understand that your trading history is your proprietary edge. All journal entries and metrics are encrypted end-to-end. We do not sell or share your trading data with third parties, brokerages, or prop firms."
+    answer: "Absolutely yes. We understand that your trading history is your proprietary edge. All journal entries and metrics are encrypted end-to-end. We do not sell or share your trading data with third parties, brokerages, or prop firms."
   },
   {
     question: "Can I use ClariTrade for crypto, forex, and stocks?",
