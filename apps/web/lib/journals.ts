@@ -2,11 +2,43 @@ import { cookies } from "next/headers"
 import { prisma, type Journal, type User } from "@workspace/db"
 
 export const ACTIVE_JOURNAL_COOKIE = "claritrade_active_journal"
+export const DEFAULT_STARTING_BALANCE = 10_000
 
 export type JournalSummary = Pick<
   Journal,
-  "id" | "name" | "description" | "isDefault" | "createdAt" | "updatedAt"
+  | "id"
+  | "name"
+  | "description"
+  | "isDefault"
+  | "startingBalance"
+  | "currentBalance"
+  | "createdAt"
+  | "updatedAt"
 > & { tradeCount: number }
+
+/** Recompute currentBalance from startingBalance + closed trade P&L. */
+export async function syncJournalBalance(journalId: string): Promise<Journal> {
+  const journal = await prisma.journal.findUniqueOrThrow({
+    where: { id: journalId },
+  })
+
+  const agg = await prisma.trade.aggregate({
+    where: {
+      journalId,
+      result: { not: null },
+      outcome: { not: "PENDING" },
+    },
+    _sum: { result: true },
+  })
+
+  const currentBalance =
+    Math.round((journal.startingBalance + (agg._sum.result ?? 0)) * 100) / 100
+
+  return prisma.journal.update({
+    where: { id: journalId },
+    data: { currentBalance },
+  })
+}
 
 /** Ensure the user has at least one journal (Main). */
 export async function ensureDefaultJournal(userId: string): Promise<Journal> {
@@ -35,6 +67,8 @@ export async function ensureDefaultJournal(userId: string): Promise<Journal> {
       name: "Main Journal",
       description: "Default trading journal",
       isDefault: true,
+      startingBalance: DEFAULT_STARTING_BALANCE,
+      currentBalance: DEFAULT_STARTING_BALANCE,
     },
   })
 }
@@ -55,6 +89,8 @@ export async function listJournalsForUser(
     name: j.name,
     description: j.description,
     isDefault: j.isDefault,
+    startingBalance: j.startingBalance,
+    currentBalance: j.currentBalance,
     createdAt: j.createdAt,
     updatedAt: j.updatedAt,
     tradeCount: j._count.trades,
@@ -72,7 +108,6 @@ export async function getJournalOwnedByUser(
 
 /**
  * Resolve the active journal from cookie, falling back to default.
- * Also backfills orphan trades onto the default journal.
  */
 export async function getActiveJournal(user: User): Promise<Journal> {
   const fallback = await ensureDefaultJournal(user.id)

@@ -32,6 +32,7 @@ import {
 } from "@workspace/ui/components/select"
 import { cn } from "@workspace/ui/lib/utils"
 import { logTrade } from "../../actions/trades"
+import { getActiveJournalBalanceAction } from "@/app/actions/journals"
 import { toast } from "sonner"
 import {
   BIAS_OPTIONS,
@@ -102,7 +103,7 @@ const initialForm = (): FormState => {
     lotSize: "",
     risk: "1",
     riskType: "percent",
-    accountBalance: "10000",
+    accountBalance: "",
     psychologyNote: "",
     tags: ["Liquidity Taken", "Displacement"],
     setupType: "ORDER_BLOCK",
@@ -132,6 +133,25 @@ export function LogTradeModal() {
   const [formData, setFormData] = React.useState<FormState>(initialForm)
   const [screenshots, setScreenshots] = React.useState<File[]>([])
   const [lotManual, setLotManual] = React.useState(false)
+  const [journalName, setJournalName] = React.useState<string | null>(null)
+  const [balanceLoading, setBalanceLoading] = React.useState(false)
+
+  const loadJournalBalance = React.useCallback(async () => {
+    setBalanceLoading(true)
+    const res = await getActiveJournalBalanceAction()
+    setBalanceLoading(false)
+    if (res.success && res.currentBalance != null) {
+      setJournalName(res.journalName ?? null)
+      setFormData((prev) => ({
+        ...prev,
+        accountBalance: String(
+          Math.round(res.currentBalance! * 100) / 100
+        ),
+      }))
+    } else {
+      toast.error(res.error ?? "Could not load journal balance")
+    }
+  }, [])
 
   const openedAt = React.useMemo(() => {
     const d = new Date(formData.dateOpenedLocal)
@@ -263,7 +283,6 @@ export function LogTradeModal() {
         setScreenshots([])
         setLotManual(false)
         const preserved = {
-          accountBalance: formData.accountBalance,
           risk: formData.risk,
           riskType: formData.riskType,
           htfTimeframe: formData.htfTimeframe,
@@ -308,11 +327,11 @@ export function LogTradeModal() {
           const next = initialForm()
           setFormData((prev) => ({
             ...next,
-            accountBalance: prev.accountBalance || next.accountBalance,
             risk: prev.risk || next.risk,
             riskType: prev.riskType,
           }))
           setLotManual(false)
+          void loadJournalBalance()
         }
       }}
     >
@@ -375,11 +394,20 @@ export function LogTradeModal() {
                 <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">
                   Account Balance ($)
                 </Label>
-                <Input
-                  value={formData.accountBalance}
-                  onChange={(e) => handleChange("accountBalance", e.target.value)}
-                  className="h-10 border-slate-200 bg-white rounded-lg font-bold text-[#1E293B] shadow-none"
-                />
+                <div className="flex h-10 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 font-bold tabular-nums text-[#1E293B] dark:border-white/10 dark:bg-white/5 dark:text-slate-100">
+                  {balanceLoading
+                    ? "Loading…"
+                    : formData.accountBalance
+                      ? `$${Number(formData.accountBalance).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}`
+                      : "—"}
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  From {journalName ?? "active journal"} · updates with closed
+                  P&amp;L
+                </p>
               </div>
               <div className="grid gap-2">
                 <div className="flex justify-between items-center">

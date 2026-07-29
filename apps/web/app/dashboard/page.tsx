@@ -37,7 +37,8 @@ export default async function DashboardPage() {
       : []
 
   const statsCalc = computeJournalStats(allTrades)
-  const chartData = buildEquityCurve(allTrades, 10_000)
+  const startBal = journal?.startingBalance ?? 10_000
+  const chartData = buildEquityCurve(allTrades, startBal)
   const hasTrades = allTrades.length > 0
   const closed = allTrades.filter((t) => t.outcome && t.outcome !== "PENDING")
 
@@ -123,7 +124,7 @@ export default async function DashboardPage() {
       <PerformanceChart
         data={chartData}
         hasTrades={closed.length > 0}
-        startingBalance={10_000}
+        startingBalance={startBal}
       />
       <SmcOverview
         byKillzone={byKillzone}

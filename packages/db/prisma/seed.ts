@@ -613,8 +613,12 @@ async function seedForUser(userId: string, email: string) {
       name: "Main Journal",
       description: "Default trading journal",
       isDefault: true,
+      startingBalance: 10_000,
+      currentBalance: 10_000,
     },
   })
+
+  let running = 10_000
 
   for (const t of SEED_TRADES) {
     const isOpen = t.exit == null || Number.isNaN(Number(t.exit))
@@ -667,7 +671,7 @@ async function seedForUser(userId: string, email: string) {
         killzone: t.killzone,
         tags: t.tags,
         psychologyNote: t.psychologyNote,
-        accountBalance: 10_000,
+        accountBalance: running,
         riskAmount: m.riskAmount,
         riskPercent: 1,
         setupType: t.setupType,
@@ -691,7 +695,16 @@ async function seedForUser(userId: string, email: string) {
         dateClosed: exit != null ? new Date(dateOpened.getTime() + 2 * 60 * 60 * 1000) : null,
       },
     })
+
+    if (typeof m.result === "number") {
+      running += m.result
+    }
   }
+
+  await prisma.journal.update({
+    where: { id: journal.id },
+    data: { currentBalance: running },
+  })
 
   console.log(`Seeded ${SEED_TRADES.length} trades for ${email}`)
 }

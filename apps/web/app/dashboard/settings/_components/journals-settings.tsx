@@ -29,6 +29,8 @@ type JournalRow = {
   description: string | null
   isDefault: boolean
   tradeCount: number
+  startingBalance: number
+  currentBalance: number
 }
 
 type Props = {
@@ -44,6 +46,7 @@ export function JournalsSettings({ journals, activeJournalId }: Props) {
   const [selected, setSelected] = React.useState<JournalRow | null>(null)
   const [name, setName] = React.useState("")
   const [description, setDescription] = React.useState("")
+  const [startingBalance, setStartingBalance] = React.useState("10000")
   const [busy, setBusy] = React.useState(false)
 
   const refresh = () => router.refresh()
@@ -51,6 +54,7 @@ export function JournalsSettings({ journals, activeJournalId }: Props) {
   const openCreate = () => {
     setName("")
     setDescription("")
+    setStartingBalance("10000")
     setCreateOpen(true)
   }
 
@@ -71,6 +75,7 @@ export function JournalsSettings({ journals, activeJournalId }: Props) {
     const res = await createJournalAction({
       name,
       description,
+      startingBalance: parseFloat(startingBalance),
       switchTo: true,
     })
     setBusy(false)
@@ -168,8 +173,13 @@ export function JournalsSettings({ journals, activeJournalId }: Props) {
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-xs text-slate-500">
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                     {j.tradeCount} trade{j.tradeCount === 1 ? "" : "s"}
+                    {" · "}
+                    Balance $
+                    {j.currentBalance.toLocaleString(undefined, {
+                      maximumFractionDigits: 0,
+                    })}
                     {j.description ? ` · ${j.description}` : ""}
                   </p>
                 </div>
@@ -241,6 +251,23 @@ export function JournalsSettings({ journals, activeJournalId }: Props) {
             </div>
             <div className="grid gap-1.5">
               <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Starting account balance ($)
+              </Label>
+              <Input
+                type="number"
+                min="1"
+                step="100"
+                value={startingBalance}
+                onChange={(e) => setStartingBalance(e.target.value)}
+                placeholder="10000"
+                className="h-11 rounded-lg"
+              />
+              <p className="text-xs text-slate-500">
+                Used for risk sizing and equity. Updates as you close trades.
+              </p>
+            </div>
+            <div className="grid gap-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 Description (optional)
               </Label>
               <Input
@@ -257,7 +284,9 @@ export function JournalsSettings({ journals, activeJournalId }: Props) {
             </Button>
             <Button
               onClick={() => void onCreate()}
-              disabled={busy || !name.trim()}
+              disabled={
+                busy || !name.trim() || !(parseFloat(startingBalance) > 0)
+              }
               className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white"
             >
               Create & switch

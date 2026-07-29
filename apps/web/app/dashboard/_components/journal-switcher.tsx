@@ -46,6 +46,7 @@ export function JournalSwitcher({ journals, activeJournalId }: Props) {
   const [pending, startTransition] = React.useTransition()
   const [createOpen, setCreateOpen] = React.useState(false)
   const [name, setName] = React.useState("")
+  const [startingBalance, setStartingBalance] = React.useState("10000")
   const [creating, setCreating] = React.useState(false)
 
   const active = journals.find((j) => j.id === activeJournalId) ?? journals[0]
@@ -65,12 +66,17 @@ export function JournalSwitcher({ journals, activeJournalId }: Props) {
 
   const create = async () => {
     setCreating(true)
-    const res = await createJournalAction({ name, switchTo: true })
+    const res = await createJournalAction({
+      name,
+      startingBalance: parseFloat(startingBalance),
+      switchTo: true,
+    })
     setCreating(false)
     if (res.success) {
       toast.success(`Created ${res.journal.name}`)
       setCreateOpen(false)
       setName("")
+      setStartingBalance("10000")
       router.refresh()
     } else {
       toast.error(res.error)
@@ -142,23 +148,38 @@ export function JournalSwitcher({ journals, activeJournalId }: Props) {
           <DialogHeader>
             <DialogTitle className="text-[#1E293B]">Create journal</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-2 py-2">
-            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Name
-            </Label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Prop Firm Challenge"
-              className="h-11 rounded-lg"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") void create()
-              }}
-              autoFocus
-            />
-            <p className="text-xs text-slate-500">
-              Each journal has its own trades, stats, and trade log.
-            </p>
+          <div className="grid gap-3 py-2">
+            <div className="grid gap-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Name
+              </Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Prop Firm Challenge"
+                className="h-11 rounded-lg"
+                autoFocus
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Starting account balance ($)
+              </Label>
+              <Input
+                type="number"
+                min="1"
+                step="100"
+                value={startingBalance}
+                onChange={(e) => setStartingBalance(e.target.value)}
+                className="h-11 rounded-lg"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void create()
+                }}
+              />
+              <p className="text-xs text-slate-500">
+                Trade risk uses this journal&apos;s running balance.
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -170,7 +191,9 @@ export function JournalSwitcher({ journals, activeJournalId }: Props) {
             </Button>
             <Button
               onClick={() => void create()}
-              disabled={creating || !name.trim()}
+              disabled={
+                creating || !name.trim() || !(parseFloat(startingBalance) > 0)
+              }
               className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white"
             >
               {creating ? "Creating…" : "Create & switch"}

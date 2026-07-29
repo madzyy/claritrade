@@ -1,7 +1,7 @@
 "use server"
 
 import { getOrCreatePrismaUser } from "@/lib/auth"
-import { getActiveJournal } from "@/lib/journals"
+import { getActiveJournal, syncJournalBalance } from "@/lib/journals"
 import {
   calculateOteZone,
   calculateTradeMetrics,
@@ -124,12 +124,12 @@ export async function logTrade(formData: LogTradeInput) {
       }
     }
 
-    const balance = num(formData.accountBalance)
+    const balance = journal.currentBalance
     const riskVal = num(formData.risk)
     let riskAmount = metrics.riskAmount
     let riskPercent: number | null = null
 
-    if (balance != null && riskVal != null && formData.riskType) {
+    if (riskVal != null && formData.riskType) {
       riskAmount = resolveRiskDollars({
         balance,
         riskValue: riskVal,
@@ -141,7 +141,7 @@ export async function logTrade(formData: LogTradeInput) {
           : balance > 0
             ? (riskAmount / balance) * 100
             : null
-    } else if (balance != null && balance > 0) {
+    } else if (balance > 0) {
       riskPercent = (riskAmount / balance) * 100
     }
 
@@ -190,8 +190,12 @@ export async function logTrade(formData: LogTradeInput) {
       },
     })
 
+    // Keep journal equity in sync after closed trades
+    await syncJournalBalance(journal.id)
+
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/trades")
+    revalidatePath("/dashboard/settings")
     return { success: true, trade }
   } catch (error) {
     console.error("Failed to log trade:", error)

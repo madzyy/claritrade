@@ -51,6 +51,8 @@ export default async function SettingsPage() {
             description: j.description,
             isDefault: j.isDefault,
             tradeCount: j.tradeCount,
+            startingBalance: j.startingBalance,
+            currentBalance: j.currentBalance,
           }))}
           activeJournalId={active.id}
         />
