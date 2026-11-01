@@ -50,7 +50,7 @@ export function Header({ journals = [], activeJournalId }: HeaderProps) {
             {title}
           </h1>
           <Badge className="rounded-md border-none bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:bg-white/10 dark:text-slate-400">
-            SMC / ICT
+            NQ
           </Badge>
           {isTradeLog && (
             <Badge className="rounded-md border-none bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:bg-white/10 dark:text-slate-500">

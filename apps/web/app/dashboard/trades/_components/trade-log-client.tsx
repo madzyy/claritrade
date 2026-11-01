@@ -1,9 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Search, ChevronRight, ChevronLeft } from "lucide-react"
+import { ChevronLeft, ChevronRight, PencilLine, RefreshCw } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
-import { Input } from "@workspace/ui/components/input"
 import {
   Select,
   SelectContent,
@@ -11,27 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select"
-import {
-  getNyParts,
-  killzoneLabel,
-  setupTypeShort,
-  SETUP_TYPES,
-  KILLZONES,
-} from "@/lib/trading"
-import {
-  TableSection,
-  TableHeader,
-  TableRow,
-  TableLabel,
-  TableCell,
-  formatUsd,
-  pnlClass,
-} from "../../_components/data-table"
+import { cn } from "@workspace/ui/lib/utils"
 
 export type SerializedTrade = {
   id: string
   pair: string
   direction: string
+  lotSize: number
+  stopLoss: number
+  takeProfit: number | null
+  entryModel: string | null
+  tags: string[]
   entry: number
   exit: number | null
   rr: number | null
@@ -47,179 +36,246 @@ export type SerializedTrade = {
   liquidityTaken: boolean
   liquiditySide: string | null
   dateOpened: string
+  dateClosed?: string | null
+  accountBalance?: number | null
+}
+
+type Row = {
+  id: string
+  size: string
+  trade: string
+  stopLoss: string
+  fees: string
+  takeProfit: string
+  entryDate: string
+  exitDate: string
+  returnUsd: number | null
+  returnPct: number | null
+  returnR: number | null
+  entryPrice: string
+  grossPnl: number | null
+  exitPrice: string
 }
 
 const PAGE_SIZE = 12
-const COLS = ["Setup", "R Multiple", "Net Profit / Loss", "Outcome"] as const
 
-function outcomeLabel(outcome: string | null) {
-  if (outcome === "WIN") return "Win"
-  if (outcome === "LOSS") return "Loss"
-  if (outcome === "BREAKEVEN") return "B.E."
-  return "Open"
+function formatNum(n: number | null | undefined, digits = 2) {
+  if (n == null || Number.isNaN(n)) return "-"
+  return n.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: digits,
+  })
 }
 
-export function TradeLogClient({ trades }: { trades: SerializedTrade[] }) {
-  const [query, setQuery] = React.useState("")
-  const [direction, setDirection] = React.useState("all")
-  const [outcome, setOutcome] = React.useState("all")
-  const [setup, setSetup] = React.useState("all")
-  const [killzone, setKillzone] = React.useState("all")
-  const [page, setPage] = React.useState(1)
+function formatDate(date: string | null | undefined) {
+  if (!date) return "-"
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return "-"
+  return d.toLocaleString(undefined, {
+    month: "numeric",
+    day: "numeric",
+    year: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+  })
+}
 
+function formatSigned(n: number | null | undefined) {
+  if (n == null || Number.isNaN(n)) return "-"
+  return `${n >= 0 ? "+" : "-"}${Math.abs(n).toFixed(2)}`
+}
+
+function pnlPill(n: number | null | undefined) {
+  if (n == null || Number.isNaN(n)) return "bg-white/5 text-slate-400"
+  return n >= 0
+    ? "bg-emerald-500/20 text-emerald-300"
+    : "bg-rose-500/20 text-rose-300"
+}
+
+function toRow(trade: SerializedTrade): Row {
+  const returnUsd = trade.result ?? null
+  const returnPct =
+    returnUsd != null && trade.accountBalance && trade.accountBalance > 0
+      ? (returnUsd / trade.accountBalance) * 100
+      : null
+
+  return {
+    id: trade.id,
+    size: formatNum(trade.lotSize, 2),
+    trade: formatNum(trade.entry, 5),
+    stopLoss: formatNum(trade.stopLoss, 5),
+    fees: "-",
+    takeProfit: formatNum(trade.takeProfit, 5),
+    entryDate: formatDate(trade.dateOpened),
+    exitDate: formatDate(trade.dateClosed ?? null),
+    returnUsd,
+    returnPct,
+    returnR: trade.rMultiple ?? null,
+    entryPrice: formatNum(trade.entry, 5),
+    grossPnl: returnUsd,
+    exitPrice: formatNum(trade.exit, 5),
+  }
+}
+
+export function TradeLogClient({
+  trades,
+  accountName,
+}: {
+  trades: SerializedTrade[]
+  accountName: string
+}) {
+  const [page, setPage] = React.useState(1)
+  const [account, setAccount] = React.useState(accountName)
+  const [filterMode, setFilterMode] = React.useState<"basic" | "tags">("basic")
+
+  const rows = React.useMemo(() => trades.map(toRow), [trades])
   const filtered = React.useMemo(() => {
-    return trades.filter((t) => {
-      if (query && !t.pair.toLowerCase().includes(query.toLowerCase())) {
-        return false
-      }
-      if (direction !== "all") {
-        const d = t.direction.toLowerCase()
-        if (direction === "long" && !(d === "buy" || d === "long")) return false
-        if (direction === "short" && !(d === "sell" || d === "short"))
-          return false
-      }
-      if (outcome !== "all") {
-        const o = (t.outcome || "PENDING").toUpperCase()
-        if (outcome === "win" && o !== "WIN") return false
-        if (outcome === "loss" && o !== "LOSS") return false
-        if (outcome === "be" && o !== "BREAKEVEN") return false
-        if (outcome === "pending" && o !== "PENDING") return false
-      }
-      if (setup !== "all" && t.setupType !== setup) return false
-      if (killzone !== "all" && t.killzone !== killzone) return false
-      return true
-    })
-  }, [trades, query, direction, outcome, setup, killzone])
+    if (account !== accountName) return []
+    if (filterMode === "basic") return rows
+    return rows.filter((r) => r.returnR != null && r.returnR > 0)
+  }, [rows, account, accountName, filterMode])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
-  const pageRows = filtered.slice(
-    (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE
-  )
+  const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
 
   React.useEffect(() => {
     setPage(1)
-  }, [query, direction, outcome, setup, killzone])
+  }, [account, filterMode])
 
   return (
-    <div className="flex flex-col gap-6 py-4 lg:py-6 relative min-h-full">
-      <div className="mx-4 lg:mx-8 rounded-xl border border-[#E5E7EB] bg-white p-4 flex flex-col lg:flex-row lg:items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search pair (e.g. EURUSD, XAUUSD)..."
-            className="pl-10 h-10 border-[#E5E7EB] bg-white rounded-lg shadow-none"
-          />
-        </div>
+    <div className="relative min-h-full flex flex-col gap-6 py-4 lg:py-6">
+      <div className="mx-4 lg:mx-8 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#0b0f17] px-3 py-2">
+        <Select value={account} onValueChange={setAccount}>
+          <SelectTrigger className="h-8 w-[180px] rounded-md border-white/15 bg-[#111827] text-xs text-slate-200">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={accountName}>{accountName}</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {(
-            [
-              [direction, setDirection, "all", [["all", "All sides"], ["long", "Long"], ["short", "Short"]], 110],
-              [outcome, setOutcome, "all", [["all", "All"], ["win", "Win"], ["loss", "Loss"], ["be", "B.E."], ["pending", "Pending"]], 110],
-            ] as const
-          ).map(([value, setter, , items, width], i) => (
-            <Select key={i} value={value} onValueChange={setter}>
-              <SelectTrigger
-                className="h-10 border-[#E5E7EB] rounded-lg font-medium text-[#64748B] shadow-none"
-                style={{ width }}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-lg">
-                {items.map(([v, label]) => (
-                  <SelectItem key={v} value={v}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ))}
-
-          <Select value={setup} onValueChange={setSetup}>
-            <SelectTrigger className="w-[130px] h-10 border-[#E5E7EB] rounded-lg font-medium text-[#64748B] shadow-none">
-              <SelectValue placeholder="Setup" />
-            </SelectTrigger>
-            <SelectContent className="rounded-lg">
-              <SelectItem value="all">All setups</SelectItem>
-              {SETUP_TYPES.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.short}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={killzone} onValueChange={setKillzone}>
-            <SelectTrigger className="w-[140px] h-10 border-[#E5E7EB] rounded-lg font-medium text-[#64748B] shadow-none">
-              <SelectValue placeholder="Killzone" />
-            </SelectTrigger>
-            <SelectContent className="rounded-lg">
-              <SelectItem value="all">All KZ</SelectItem>
-              {KILLZONES.map((k) => (
-                <SelectItem key={k.id} value={k.id}>
-                  {k.label}
-                </SelectItem>
-              ))}
-              <SelectItem value="OUTSIDE">Outside</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-slate-400 hover:text-slate-200"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-slate-400 hover:text-slate-200"
+          >
+            <PencilLine className="h-3.5 w-3.5" />
+          </button>
+          <span className="mx-1 h-5 w-px bg-white/10" />
+          <span className="text-xs text-slate-400">Filter by</span>
+          <button
+            type="button"
+            onClick={() => setFilterMode("basic")}
+            className={cn(
+              "rounded-md border px-2.5 py-1 text-xs",
+              filterMode === "basic"
+                ? "border-white/25 bg-white/10 text-slate-100"
+                : "border-white/15 text-slate-400"
+            )}
+          >
+            Basic
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterMode("tags")}
+            className={cn(
+              "rounded-md border px-2.5 py-1 text-xs",
+              filterMode === "tags"
+                ? "border-white/25 bg-white/10 text-slate-100"
+                : "border-white/15 text-slate-400"
+            )}
+          >
+            Tags
+          </button>
         </div>
       </div>
 
-      <TableSection title="Trade log">
-        <TableHeader columns={[...COLS]} />
-        {pageRows.length === 0 ? (
-          <div className="px-6 py-16 text-center text-sm text-[#94A3B8]">
-            No trades match these filters.
-          </div>
-        ) : (
-          pageRows.map((trade) => {
-            const ny = getNyParts(new Date(trade.dateOpened))
-            const dir = trade.direction.toUpperCase()
-            const side = dir === "BUY" || dir === "LONG" ? "Long" : "Short"
-            return (
-              <TableRow key={trade.id}>
-                <TableLabel
-                  title={`${trade.pair} · ${side}`}
-                  subtitle={`${killzoneLabel(trade.killzone)} · ${ny.dateLabel} ${ny.timeLabel} NY`}
-                />
-                <TableCell label="Setup">
-                  {setupTypeShort(trade.setupType)}
-                </TableCell>
-                <TableCell label="R">
-                  {trade.rMultiple != null
-                    ? `${trade.rMultiple >= 0 ? "+" : ""}${trade.rMultiple.toFixed(2)}R`
-                    : trade.rr != null
-                      ? `${trade.rr.toFixed(1)} RR`
-                      : "—"}
-                </TableCell>
-                <TableCell label="Net P/L" className={pnlClass(trade.result)}>
-                  {formatUsd(trade.result)}
-                </TableCell>
-                <TableCell label="Outcome">
-                  {outcomeLabel(trade.outcome)}
-                </TableCell>
-              </TableRow>
-            )
-          })
-        )}
-      </TableSection>
+      <section className="mx-4 lg:mx-8">
+        <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#0b0f17]">
+          <table className="min-w-[1650px] w-full">
+            <thead>
+              <tr className="border-b border-white/10">
+                {[
+                  "Size",
+                  "Trade",
+                  "Stop loss",
+                  "Fees",
+                  "Take profit",
+                  "Entry date",
+                  "Exit date",
+                  "Return ($)",
+                  "Return (%)",
+                  "Return (R)",
+                  "Entry price",
+                  "Gross PnL",
+                  "Exit price",
+                ].map((h) => (
+                  <th
+                    key={h}
+                    className="px-3 py-3 text-left text-[12px] font-medium text-slate-400"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {pageRows.length === 0 ? (
+                <tr>
+                  <td colSpan={13} className="px-6 py-16 text-center text-sm text-slate-400">
+                    No trades match these filters.
+                  </td>
+                </tr>
+              ) : (
+                pageRows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b border-white/5 transition-colors hover:bg-white/[0.03] last:border-0"
+                  >
+                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-100">{row.size}</td>
+                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">{row.trade}</td>
+                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">{row.stopLoss}</td>
+                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-500">{row.fees}</td>
+                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">{row.takeProfit}</td>
+                    <td className="px-3 py-3 text-[13px] text-slate-400">{row.entryDate}</td>
+                    <td className="px-3 py-3 text-[13px] text-slate-400">{row.exitDate}</td>
+                    <td className="px-3 py-3">
+                      <span className={cn("rounded-md px-2 py-1 text-[11px] font-semibold", pnlPill(row.returnUsd))}>
+                        {formatSigned(row.returnUsd)}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">
+                      {row.returnPct == null ? "0%" : `${row.returnPct.toFixed(2)}%`}
+                    </td>
+                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">
+                      {row.returnR == null ? "N/A" : row.returnR.toFixed(2)}
+                    </td>
+                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">{row.entryPrice}</td>
+                    <td className="px-3 py-3">
+                      <span className={cn("rounded-md px-2 py-1 text-[11px] font-semibold", pnlPill(row.grossPnl))}>
+                        {formatSigned(row.grossPnl)}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">{row.exitPrice}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <div className="mx-4 lg:mx-8 flex items-center justify-between">
-        <div className="text-[12px] text-[#64748B]">
-          Showing{" "}
-          <span className="font-semibold text-[#1E293B] dark:text-slate-100">
-            {pageRows.length}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-[#1E293B] dark:text-slate-100">
-            {filtered.length}
-          </span>{" "}
-          trades
+        <div className="text-[12px] text-slate-400">
+          Showing <span className="font-semibold text-slate-100">{pageRows.length}</span> of{" "}
+          <span className="font-semibold text-slate-100">{filtered.length}</span> trades
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -231,7 +287,7 @@ export function TradeLogClient({ trades }: { trades: SerializedTrade[] }) {
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-[12px] font-semibold text-[#64748B] px-2">
+          <span className="px-2 text-[12px] font-semibold text-[#64748B]">
             {safePage} / {totalPages}
           </span>
           <Button

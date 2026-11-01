@@ -160,6 +160,28 @@ export function calculateTradeMetrics(input: TradeCalcInput): TradeCalcResult {
   }
 }
 
+/** Midpoint of a dealing range. First target, then continuation if price breaks through. */
+export function calculateRangeMid(
+  rangeHigh: number,
+  rangeLow: number
+): number | null {
+  if (rangeHigh <= rangeLow) return null
+  return rangeLow + (rangeHigh - rangeLow) * 0.5
+}
+
+/** Premium is above 50%. Discount is below. Sell premium, buy discount. */
+export function premiumDiscount(
+  price: number,
+  rangeHigh: number,
+  rangeLow: number
+): "PREMIUM" | "DISCOUNT" | "EQ" | null {
+  const mid = calculateRangeMid(rangeHigh, rangeLow)
+  if (mid == null) return null
+  const band = (rangeHigh - rangeLow) * 0.01
+  if (Math.abs(price - mid) <= band) return "EQ"
+  return price > mid ? "PREMIUM" : "DISCOUNT"
+}
+
 /** ICT Optimal Trade Entry zone (0.62–0.79 Fibonacci of dealing range). */
 export function calculateOteZone(
   direction: TradeDirection,

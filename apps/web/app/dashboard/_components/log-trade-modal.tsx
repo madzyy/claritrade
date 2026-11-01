@@ -9,7 +9,6 @@ import {
   Loader2,
   Layers,
   Clock,
-  Target,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@workspace/ui/components/button"
@@ -37,22 +36,56 @@ import { toast } from "sonner"
 import {
   BIAS_OPTIONS,
   CONFLUENCE_TAGS,
+  EXTERNAL_POOLS,
   HTF_TIMEFRAMES,
+  IMBALANCES,
   INSTRUMENT_OPTIONS,
   KILLZONES,
-  LIQUIDITY_SIDES,
   LTF_TIMEFRAMES,
+  DEALING_FORMATIONS,
+  DEFERRED_STEPS,
+  DEFER_CANDLES,
+  FIFTY_ROLES,
+  MARKET_PROFILES,
   MTF_TIMEFRAMES,
-  SETUP_TYPES,
+  OPPOSING_STOPS,
+  RANGE_CONFIRMS,
+  RANGE_LIQUIDITY,
+  RANGE_RESOLUTIONS,
+  RANGE_SEQUENCE,
+  RANGE_TYPES,
+  biasLabel,
+  deferredDefaults,
+  deferredTagsFor,
   calculateLotSize,
-  calculateOteZone,
+  calculateRangeMid,
   calculateTradeMetrics,
+  premiumDiscount,
   detectKillzone,
+  formatSessionWindow,
+  getInstrumentSpec,
   getNyParts,
+  killzoneLabel,
+  liquidityTagsFor,
+  profileShort,
+  rangeLiquidityShort,
+  rangeTagsFor,
   resolveRiskDollars,
+  stripLiquidityTags,
   type KillzoneId,
   type TradeDirection,
 } from "@/lib/trading"
+
+const JOURNAL_INSTRUMENTS = [
+  ...INSTRUMENT_OPTIONS.filter(
+    (inst) =>
+      inst.symbol === "NQ" || inst.symbol === "MNQ" || inst.symbol === "NAS100"
+  ),
+  ...INSTRUMENT_OPTIONS.filter(
+    (inst) =>
+      inst.symbol !== "NQ" && inst.symbol !== "MNQ" && inst.symbol !== "NAS100"
+  ),
+]
 
 type FormState = {
   pair: string
@@ -84,6 +117,20 @@ type FormState = {
   entryModel: string
   dateOpenedLocal: string
   killzone: string
+  rangeLiquidity: string
+  imbalanceType: string
+  externalPool: string
+  rangeType: string
+  rangeSequence: string[]
+  fiftyRole: string
+  dealingHigh: string
+  dealingLow: string
+  dealingFormation: string
+  rangeConfirms: string[]
+  deferredDelivery: boolean
+  deferredSteps: string[]
+  deferCandle: string
+  opposingStops: string
 }
 
 function toLocalInputValue(date: Date) {
@@ -94,7 +141,7 @@ function toLocalInputValue(date: Date) {
 const initialForm = (): FormState => {
   const now = new Date()
   return {
-    pair: "EURUSD",
+    pair: "NQ",
     direction: "buy",
     entry: "",
     exit: "",
@@ -105,14 +152,14 @@ const initialForm = (): FormState => {
     riskType: "percent",
     accountBalance: "",
     psychologyNote: "",
-    tags: ["Liquidity Taken", "Displacement"],
-    setupType: "ORDER_BLOCK",
+    tags: [],
+    setupType: "",
     poiHigh: "",
     poiLow: "",
     swingHigh: "",
     swingLow: "",
-    liquiditySide: "SELL_SIDE",
-    liquidityTaken: true,
+    liquiditySide: "",
+    liquidityTaken: false,
     mssConfirmed: false,
     htfTimeframe: "H4",
     htfBias: "BULLISH",
@@ -124,6 +171,20 @@ const initialForm = (): FormState => {
     dateOpenedLocal: toLocalInputValue(now),
     // Manual — journaling often happens after the session
     killzone: "",
+    rangeLiquidity: "",
+    imbalanceType: "",
+    externalPool: "",
+    rangeType: "",
+    rangeSequence: [],
+    fiftyRole: "FIRST_TARGET",
+    dealingHigh: "",
+    dealingLow: "",
+    dealingFormation: "",
+    rangeConfirms: [],
+    deferredDelivery: false,
+    deferredSteps: [],
+    deferCandle: "",
+    opposingStops: "",
   }
 }
 
@@ -161,17 +222,47 @@ export function LogTradeModal() {
   const ny = React.useMemo(() => getNyParts(openedAt), [openedAt])
   // Hint only — never overwrites the trader's killzone choice
   const suggestedKz = React.useMemo(() => detectKillzone(openedAt), [openedAt])
-  const selectedKzLabel =
-    formData.killzone === "OUTSIDE"
-      ? "Outside Killzones"
-      : KILLZONES.find((k) => k.id === formData.killzone)?.label ?? null
+  const selectedKzLabel = formData.killzone
+    ? killzoneLabel(formData.killzone)
+    : null
 
-  const ote = React.useMemo(() => {
-    const sh = parseFloat(formData.swingHigh)
-    const sl = parseFloat(formData.swingLow)
-    if (Number.isNaN(sh) || Number.isNaN(sl)) return null
-    return calculateOteZone(formData.direction, sh, sl)
-  }, [formData.swingHigh, formData.swingLow, formData.direction])
+  const rangeMid = React.useMemo(() => {
+    const high = parseFloat(formData.swingHigh)
+    const low = parseFloat(formData.swingLow)
+    if (Number.isNaN(high) || Number.isNaN(low)) return null
+    return calculateRangeMid(high, low)
+  }, [formData.swingHigh, formData.swingLow])
+
+  const dealingMid = React.useMemo(() => {
+    const high = parseFloat(formData.dealingHigh)
+    const low = parseFloat(formData.dealingLow)
+    if (Number.isNaN(high) || Number.isNaN(low)) return null
+    return calculateRangeMid(high, low)
+  }, [formData.dealingHigh, formData.dealingLow])
+
+  const pd = React.useMemo(() => {
+    const entry = parseFloat(formData.entry)
+    if (Number.isNaN(entry)) return null
+    const dHigh = parseFloat(formData.dealingHigh)
+    const dLow = parseFloat(formData.dealingLow)
+    if (!Number.isNaN(dHigh) && !Number.isNaN(dLow)) {
+      return premiumDiscount(entry, dHigh, dLow)
+    }
+    const rHigh = parseFloat(formData.swingHigh)
+    const rLow = parseFloat(formData.swingLow)
+    if (!Number.isNaN(rHigh) && !Number.isNaN(rLow)) {
+      return premiumDiscount(entry, rHigh, rLow)
+    }
+    return null
+  }, [
+    formData.entry,
+    formData.dealingHigh,
+    formData.dealingLow,
+    formData.swingHigh,
+    formData.swingLow,
+  ])
+
+  const priceDecimals = getInstrumentSpec(formData.pair).decimals
 
   const preview = React.useMemo(() => {
     const entry = parseFloat(formData.entry)
@@ -262,17 +353,110 @@ export function LogTradeModal() {
 
   const handleSubmit = async () => {
     if (!formData.killzone) {
-      toast.error("Select a killzone", {
-        description:
-          "Pick the ICT session you traded — don’t rely on when you’re journaling.",
+      toast.error("Select a session", {
+        description: "Pick the session you traded.",
       })
       return
     }
+    if (!formData.setupType) {
+      toast.error("Profile the market", {
+        description:
+          "Choose consolidation, expansion, reversal, or retracement.",
+      })
+      return
+    }
+    if (!formData.rangeLiquidity) {
+      toast.error("Name the range liquidity", {
+        description:
+          "Price is either in an imbalance or at an old high or low.",
+      })
+      return
+    }
+    if (formData.rangeLiquidity === "INTERNAL" && !formData.imbalanceType) {
+      toast.error("Name the imbalance", {
+        description:
+          "FVG, volume imbalance, new week opening gap, or new day opening gap.",
+      })
+      return
+    }
+    if (!formData.externalPool) {
+      toast.error(
+        formData.rangeLiquidity === "INTERNAL"
+          ? "Name the old high or low"
+          : "Which high or low was run?",
+        {
+          description:
+            formData.rangeLiquidity === "INTERNAL"
+              ? "From an imbalance, the next candle seeks an old high or an old low."
+              : "After an old high or low is run, the next candle seeks an FVG.",
+        }
+      )
+      return
+    }
+    if (!formData.rangeType) {
+      toast.error("Name the range", {
+        description: "Structural range or 1 candle range.",
+      })
+      return
+    }
+    const rangeHigh = parseFloat(formData.swingHigh)
+    const rangeLow = parseFloat(formData.swingLow)
+    if (
+      Number.isNaN(rangeHigh) ||
+      Number.isNaN(rangeLow) ||
+      rangeHigh <= rangeLow
+    ) {
+      toast.error("Mark the three levels", {
+        description: "Range high has to sit above range low. 50% fills in.",
+      })
+      return
+    }
+    const {
+      rangeLiquidity,
+      imbalanceType,
+      externalPool,
+      rangeType,
+      rangeSequence,
+      fiftyRole,
+      dealingHigh,
+      dealingLow,
+      dealingFormation,
+      rangeConfirms,
+      deferredDelivery,
+      deferredSteps,
+      deferCandle,
+      opposingStops,
+      tags,
+      ...tradeFields
+    } = formData
+    const nextTags = [
+      ...stripLiquidityTags(tags),
+      ...liquidityTagsFor({ rangeLiquidity, imbalanceType, externalPool }),
+      ...rangeTagsFor({
+        rangeType,
+        rangeSequence,
+        fiftyRole,
+        pairedWithHtfKl: formData.mssConfirmed,
+        dealingFormation,
+        rangeConfirms,
+        premiumDiscount: pd,
+        dealingHigh,
+        dealingLow,
+      }),
+      ...deferredTagsFor({
+        deferred: deferredDelivery,
+        deferredSteps,
+        deferCandle,
+        opposingStops,
+      }),
+    ]
     setIsSubmitting(true)
     try {
       const screenshotUrls = await uploadScreenshots()
       const result = await logTrade({
-        ...formData,
+        ...tradeFields,
+        poiLow: formData.poiLow || dealingLow || null,
+        tags: nextTags,
         screenshotUrls,
         dateOpened: openedAt.toISOString(),
         killzone: formData.killzone as KillzoneId,
@@ -290,8 +474,8 @@ export function LogTradeModal() {
           ltfTimeframe: formData.ltfTimeframe,
         }
         setFormData({ ...initialForm(), ...preserved })
-        toast.success("SMC trade logged", {
-          description: `${formData.pair} ${formData.direction.toUpperCase()} · ${formData.setupType.replace(/_/g, " ")}`,
+        toast.success("Trade logged", {
+          description: `${formData.pair} ${formData.direction.toUpperCase()} · ${biasLabel(formData.htfBias)} · ${rangeLiquidityShort(nextTags) || profileShort(formData.setupType)}`,
         })
       } else {
         toast.error("Failed to log trade", { description: result.error })
@@ -316,6 +500,42 @@ export function LogTradeModal() {
         ? prev.tags.filter((t) => t !== tag)
         : [...prev.tags, tag],
     }))
+  }
+
+  const toggleRangeStep = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      rangeSequence: prev.rangeSequence.includes(id)
+        ? prev.rangeSequence.filter((step) => step !== id)
+        : [...prev.rangeSequence, id],
+    }))
+  }
+
+  const toggleRangeConfirm = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      rangeConfirms: prev.rangeConfirms.includes(id)
+        ? prev.rangeConfirms.filter((step) => step !== id)
+        : [...prev.rangeConfirms, id],
+    }))
+  }
+
+  const toggleDeferredStep = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      deferredSteps: prev.deferredSteps.includes(id)
+        ? prev.deferredSteps.filter((step) => step !== id)
+        : [...prev.deferredSteps, id],
+    }))
+  }
+
+  const setBias = (bias: string) => {
+    setFormData((prev) => {
+      if (!prev.deferredDelivery) {
+        return { ...prev, htfBias: bias }
+      }
+      return { ...prev, htfBias: bias, ...deferredDefaults(bias) }
+    })
   }
 
   return (
@@ -346,9 +566,9 @@ export function LogTradeModal() {
           <div className="p-6 pb-0 shrink-0">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-[#1E293B]">Log SMC / ICT Trade</h2>
+                <h2 className="text-2xl font-bold text-[#1E293B]">Log trade</h2>
                 <Badge className="bg-[#2563EB]/10 text-[#2563EB] border-none px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider">
-                  Multi-TF
+                  LTP · ITP · STP
                 </Badge>
               </div>
             </div>
@@ -371,7 +591,7 @@ export function LogTradeModal() {
                   </Badge>
                 ) : (
                   <Badge className="border-none bg-slate-200 text-slate-600 text-[10px] font-bold">
-                    Select killzone
+                    Select session
                   </Badge>
                 )}
                 {formData.killzone !== suggestedKz.id && (
@@ -453,7 +673,7 @@ export function LogTradeModal() {
             <section className="grid grid-cols-2 gap-x-6 gap-y-4">
               <div className="grid gap-2">
                 <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">
-                  Pair / Instrument
+                  Instrument
                 </Label>
                 <Select
                   value={formData.pair}
@@ -463,7 +683,7 @@ export function LogTradeModal() {
                     <SelectValue placeholder="Select Pair" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
-                    {INSTRUMENT_OPTIONS.map((inst) => (
+                    {JOURNAL_INSTRUMENTS.map((inst) => (
                       <SelectItem key={inst.symbol} value={inst.symbol}>
                         {inst.label}
                       </SelectItem>
@@ -504,23 +724,22 @@ export function LogTradeModal() {
               </div>
               <div className="grid gap-2">
                 <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">
-                  ICT Killzone <span className="text-[#2563EB]">*</span>
+                  Session <span className="text-[#2563EB]">*</span>
                 </Label>
                 <Select
                   value={formData.killzone || undefined}
                   onValueChange={(v) => handleChange("killzone", v)}
                 >
                   <SelectTrigger className="h-11 border-slate-200 bg-[#F8FAFC] rounded-lg font-semibold text-[#1E293B]">
-                    <SelectValue placeholder="Which session did you trade?" />
+                    <SelectValue placeholder="Which session did you execute in?" />
                   </SelectTrigger>
                   <SelectContent>
                     {KILLZONES.map((kz) => (
                       <SelectItem key={kz.id} value={kz.id}>
-                        {kz.label} ({String(kz.startHour).padStart(2, "0")}:00–
-                        {String(kz.endHour).padStart(2, "0")}:00 NY)
+                        {kz.label} ({formatSessionWindow(kz)})
                       </SelectItem>
                     ))}
-                    <SelectItem value="OUTSIDE">Outside Killzones</SelectItem>
+                    <SelectItem value="OUTSIDE">Outside session</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -568,7 +787,9 @@ export function LogTradeModal() {
               <div className="grid gap-2">
                 <div className="flex items-center gap-2">
                   <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">
-                    Lot Size
+                    {getInstrumentSpec(formData.pair).category === "index"
+                      ? "Contracts"
+                      : "Lot Size"}
                   </Label>
                   {!lotManual && (
                     <Badge className="bg-[#2563EB]/10 text-[#2563EB] border-none text-[8px] px-1 py-0 font-black uppercase">
@@ -622,158 +843,26 @@ export function LogTradeModal() {
               </div>
             </section>
 
-            {/* Setup type */}
-            <section className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-[#2563EB]" />
-                <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">
-                  SMC / ICT Setup
-                </Label>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {SETUP_TYPES.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => handleChange("setupType", s.id)}
-                    title={s.description}
-                    className={cn(
-                      "rounded-lg border px-3 py-2 text-left transition-all",
-                      formData.setupType === s.id
-                        ? "border-[#2563EB] bg-[#2563EB] text-white"
-                        : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                    )}
-                  >
-                    <div className="text-[11px] font-bold">{s.short}</div>
-                    <div
-                      className={cn(
-                        "text-[9px]",
-                        formData.setupType === s.id
-                          ? "text-blue-100"
-                          : "text-slate-400"
-                      )}
-                    >
-                      {s.label}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            {/* POI / OTE / Liquidity */}
-            <section className="rounded-2xl border border-slate-100 bg-[#F8FAFC] p-5 flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <Layers className="h-4 w-4 text-[#2563EB]" />
-                <span className="text-sm font-bold text-[#1E293B]">
-                  Point of Interest & OTE
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label className="text-[10px] font-bold text-[#94A3B8] uppercase">
-                    POI / OB High
-                  </Label>
-                  <Input
-                    value={formData.poiHigh}
-                    onChange={(e) => handleChange("poiHigh", e.target.value)}
-                    className="h-10 bg-white border-slate-200 rounded-lg font-semibold"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label className="text-[10px] font-bold text-[#94A3B8] uppercase">
-                    POI / OB Low
-                  </Label>
-                  <Input
-                    value={formData.poiLow}
-                    onChange={(e) => handleChange("poiLow", e.target.value)}
-                    className="h-10 bg-white border-slate-200 rounded-lg font-semibold"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label className="text-[10px] font-bold text-[#94A3B8] uppercase">
-                    Dealing Range High
-                  </Label>
-                  <Input
-                    value={formData.swingHigh}
-                    onChange={(e) => handleChange("swingHigh", e.target.value)}
-                    className="h-10 bg-white border-slate-200 rounded-lg font-semibold"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label className="text-[10px] font-bold text-[#94A3B8] uppercase">
-                    Dealing Range Low
-                  </Label>
-                  <Input
-                    value={formData.swingLow}
-                    onChange={(e) => handleChange("swingLow", e.target.value)}
-                    className="h-10 bg-white border-slate-200 rounded-lg font-semibold"
-                  />
-                </div>
-              </div>
-
-              {ote && (
-                <div className="rounded-lg border border-[#2563EB]/20 bg-white px-4 py-3 text-xs font-medium text-slate-600">
-                  <span className="font-bold text-[#2563EB]">OTE Zone (0.62–0.79): </span>
-                  {ote.oteLow.toFixed(5)} — {ote.oteHigh.toFixed(5)}
-                  <span className="text-slate-400"> · EQ {ote.equilibrium.toFixed(5)}</span>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label className="text-[10px] font-bold text-[#94A3B8] uppercase">
-                    Liquidity Taken
-                  </Label>
-                  <Select
-                    value={formData.liquiditySide}
-                    onValueChange={(v) => {
-                      handleChange("liquiditySide", v)
-                      handleChange("liquidityTaken", v !== "NONE")
-                    }}
-                  >
-                    <SelectTrigger className="h-10 bg-white border-slate-200 rounded-lg font-semibold">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LIQUIDITY_SIDES.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end">
-                  <label className="flex items-center gap-2 h-10 px-3 rounded-lg border border-slate-200 bg-white cursor-pointer w-full">
-                    <input
-                      type="checkbox"
-                      checked={formData.mssConfirmed}
-                      onChange={(e) =>
-                        handleChange("mssConfirmed", e.target.checked)
-                      }
-                      className="rounded border-slate-300"
-                    />
-                    <span className="text-xs font-bold text-slate-700">
-                      MSS / CHoCH confirmed
-                    </span>
-                  </label>
-                </div>
-              </div>
-            </section>
-
-            {/* Multi-timeframe */}
             <section className="rounded-2xl border border-slate-100 p-5 flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <Layers className="h-4 w-4 text-[#2563EB]" />
-                <span className="text-sm font-bold text-[#1E293B]">
-                  Multi-Timeframe Analysis
-                </span>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-[#2563EB]" />
+                  <span className="text-sm font-bold text-[#1E293B]">
+                    LTP · ITP · STP
+                  </span>
+                </div>
+                <p className="text-xs leading-relaxed text-slate-500">
+                  Long term calls the next higher-timeframe candle from internal
+                  and external range liquidity. Intermediate is the range you
+                  trade: high, low, and 50%. Short term starts by profiling
+                  into the 9:30 equity open.
+                </p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 flex flex-col gap-2">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    HTF Bias
+                    LTP
                   </span>
                   <Select
                     value={formData.htfTimeframe}
@@ -792,7 +881,7 @@ export function LogTradeModal() {
                   </Select>
                   <Select
                     value={formData.htfBias}
-                    onValueChange={(v) => handleChange("htfBias", v)}
+                    onValueChange={setBias}
                   >
                     <SelectTrigger className="h-9 bg-white border-slate-200 text-xs font-bold">
                       <SelectValue />
@@ -808,14 +897,14 @@ export function LogTradeModal() {
                   <Textarea
                     value={formData.htfNarrative}
                     onChange={(e) => handleChange("htfNarrative", e.target.value)}
-                    placeholder="Daily/H4 draw on liquidity, premium/discount..."
+                    placeholder="The next candle points at an old high or low, or back at an FVG."
                     className="min-h-[72px] text-xs bg-white border-slate-200 resize-none"
                   />
                 </div>
 
                 <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 flex flex-col gap-2">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    MTF Structure
+                    ITP
                   </span>
                   <Select
                     value={formData.mtfTimeframe}
@@ -835,14 +924,14 @@ export function LogTradeModal() {
                   <Textarea
                     value={formData.mtfNarrative}
                     onChange={(e) => handleChange("mtfNarrative", e.target.value)}
-                    placeholder="BOS/CHoCH, FVG, OB array, inducement..."
+                    placeholder="Path to the draw. Note if delivery deferred into opposing stops first."
                     className="min-h-[108px] text-xs bg-white border-slate-200 resize-none"
                   />
                 </div>
 
                 <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 flex flex-col gap-2">
                   <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    LTF Entry
+                    STP
                   </span>
                   <Select
                     value={formData.ltfTimeframe}
@@ -862,9 +951,593 @@ export function LogTradeModal() {
                   <Textarea
                     value={formData.entryModel}
                     onChange={(e) => handleChange("entryModel", e.target.value)}
-                    placeholder="Entry model: OB tap + MSS + OTE confirmation..."
+                    placeholder="Signature, confirmation, deferred delivery if it ran opposing stops first."
                     className="min-h-[108px] text-xs bg-white border-slate-200 resize-none"
                   />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-slate-100 pt-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#94A3B8]">
+                    Dealing range
+                  </span>
+                  <p className="text-xs leading-relaxed text-slate-500">
+                    Pair the inner range with a dealing range. It forms when
+                    price breaks a high then immediately breaks a low and
+                    expands, or the other way. Draw premium / discount on it:
+                    sell only in premium, buy only in discount. If an FVG or
+                    other key level sits inside it, mark it and run the same
+                    inducement sequence.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {DEALING_FORMATIONS.map((formation) => (
+                    <button
+                      key={formation.id}
+                      type="button"
+                      title={formation.description}
+                      onClick={() =>
+                        handleChange(
+                          "dealingFormation",
+                          formData.dealingFormation === formation.id
+                            ? ""
+                            : formation.id
+                        )
+                      }
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                        formData.dealingFormation === formation.id
+                          ? "border-[#2563EB] bg-[#2563EB] text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      )}
+                    >
+                      {formation.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="grid gap-1">
+                    <Label className="text-[10px] font-bold uppercase text-[#94A3B8]">
+                      Dealing high
+                    </Label>
+                    <Input
+                      value={formData.dealingHigh}
+                      onChange={(e) =>
+                        handleChange("dealingHigh", e.target.value)
+                      }
+                      className="h-9 bg-white border-slate-200 rounded-lg text-xs font-semibold"
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label className="text-[10px] font-bold uppercase text-[#94A3B8]">
+                      EQ / 50%
+                    </Label>
+                    <div className="h-9 flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-bold tabular-nums text-[#2563EB]">
+                      {dealingMid != null
+                        ? dealingMid.toFixed(priceDecimals)
+                        : "—"}
+                    </div>
+                  </div>
+                  <div className="grid gap-1">
+                    <Label className="text-[10px] font-bold uppercase text-[#94A3B8]">
+                      Dealing low
+                    </Label>
+                    <Input
+                      value={formData.dealingLow}
+                      onChange={(e) =>
+                        handleChange("dealingLow", e.target.value)
+                      }
+                      className="h-9 bg-white border-slate-200 rounded-lg text-xs font-semibold"
+                    />
+                  </div>
+                </div>
+                {pd ? (
+                  <p
+                    className={cn(
+                      "text-xs font-semibold leading-relaxed",
+                      (formData.direction === "buy" && pd === "PREMIUM") ||
+                        (formData.direction === "sell" && pd === "DISCOUNT")
+                        ? "text-[#DC2626]"
+                        : "text-slate-600"
+                    )}
+                  >
+                    {pd === "EQ"
+                      ? "Entry is at equilibrium of the dealing range."
+                      : formData.direction === "buy"
+                        ? pd === "DISCOUNT"
+                          ? "Buying in discount."
+                          : "Buying in premium. The rule is buy only in discount."
+                        : pd === "PREMIUM"
+                          ? "Selling in premium."
+                          : "Selling in discount. The rule is sell only in premium."}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-slate-100 pt-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#94A3B8]">
+                    The range
+                  </span>
+                  <p className="text-xs leading-relaxed text-slate-500">
+                    Always trade a range. Three levels: high, 50%, low. When
+                    bullish, sell stops to buy stops. When bearish, sell the
+                    range high — do not buy it. 50% is the first target, and
+                    50% is continuation if price breaks through. The other side
+                    of the range is then the draw on liquidity.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {RANGE_TYPES.map((type) => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      title={type.description}
+                      onClick={() => handleChange("rangeType", type.id)}
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                        formData.rangeType === type.id
+                          ? "border-[#2563EB] bg-[#2563EB] text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      )}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="grid gap-1">
+                    <Label className="text-[10px] font-bold uppercase text-[#94A3B8]">
+                      Range high
+                    </Label>
+                    <Input
+                      value={formData.swingHigh}
+                      onChange={(e) =>
+                        handleChange("swingHigh", e.target.value)
+                      }
+                      className="h-9 bg-white border-slate-200 rounded-lg text-xs font-semibold"
+                    />
+                  </div>
+                  <div className="grid gap-1">
+                    <Label className="text-[10px] font-bold uppercase text-[#94A3B8]">
+                      50%
+                    </Label>
+                    <div className="h-9 flex items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-bold tabular-nums text-[#2563EB]">
+                      {rangeMid != null ? rangeMid.toFixed(priceDecimals) : "—"}
+                    </div>
+                  </div>
+                  <div className="grid gap-1">
+                    <Label className="text-[10px] font-bold uppercase text-[#94A3B8]">
+                      Range low
+                    </Label>
+                    <Input
+                      value={formData.swingLow}
+                      onChange={(e) => handleChange("swingLow", e.target.value)}
+                      className="h-9 bg-white border-slate-200 rounded-lg text-xs font-semibold"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-1">
+                    <Label className="text-[10px] font-bold uppercase text-[#94A3B8]">
+                      HTF key level
+                    </Label>
+                    <Input
+                      value={formData.poiHigh}
+                      onChange={(e) => handleChange("poiHigh", e.target.value)}
+                      placeholder="Pair the range with this KL"
+                      className="h-9 bg-white border-slate-200 rounded-lg text-xs font-semibold"
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 h-9 mt-5 px-3 rounded-lg border border-slate-200 bg-white cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.mssConfirmed}
+                      onChange={(e) =>
+                        handleChange("mssConfirmed", e.target.checked)
+                      }
+                      className="rounded border-slate-300"
+                    />
+                    <span className="text-xs font-bold text-slate-700">
+                      Paired with HTF KL
+                    </span>
+                  </label>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {RANGE_SEQUENCE.map((step) => {
+                    const active = formData.rangeSequence.includes(step.id)
+                    return (
+                      <button
+                        key={step.id}
+                        type="button"
+                        title={step.description}
+                        onClick={() => toggleRangeStep(step.id)}
+                        className={cn(
+                          "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                          active
+                            ? "border-[#2563EB] bg-[#2563EB] text-white"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                        )}
+                      >
+                        {step.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="text-xs leading-relaxed text-slate-500">
+                  {formData.rangeType === "ONE_CANDLE"
+                    ? "Candle closes near the key level: that high and low are the range. The next candle tags the KL and closes back inside (turtle soup). The other side of the range is the draw on liquidity."
+                    : "Leg almost at the key level, then a retrace: mark high and low. That retrace was inducement. Wait for the break of the range into the key level, then the break back into the range. Enter there. 50% and the other side of the range are the draw."}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {RANGE_CONFIRMS.map((confirm) => {
+                    const active = formData.rangeConfirms.includes(confirm.id)
+                    return (
+                      <button
+                        key={confirm.id}
+                        type="button"
+                        title={confirm.description}
+                        onClick={() => toggleRangeConfirm(confirm.id)}
+                        className={cn(
+                          "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                          active
+                            ? "border-[#2563EB] bg-[#2563EB] text-white"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                        )}
+                      >
+                        {confirm.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="text-xs leading-relaxed text-slate-500">
+                  A close back inside the range means the other side gets
+                  sought. Displacement through 50% says the same. Chop at 50%
+                  is accumulation: when it continues, it often hits the other
+                  side with more volatility. Drop a timeframe and look for
+                  CISD.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {FIFTY_ROLES.map((role) => (
+                    <button
+                      key={role.id}
+                      type="button"
+                      title={role.description}
+                      onClick={() => handleChange("fiftyRole", role.id)}
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                        formData.fiftyRole === role.id
+                          ? "border-[#2563EB] bg-[#2563EB] text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      )}
+                    >
+                      {role.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs leading-relaxed text-slate-600">
+                  {formData.htfBias === "BEARISH"
+                    ? "Bearish: sell the range high. Do not buy it. 50% first, then the range low if 50% gives way."
+                    : "Bullish: sell stops to buy stops. 50% first, then the range high if 50% gives way."}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-slate-100 pt-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#94A3B8]">
+                      Deferred delivery
+                    </span>
+                    <p className="text-xs leading-relaxed text-slate-500">
+                      Price leaves the draw on liquidity, runs opposing stops
+                      at high resistance liquidity, then continues to the
+                      draw. Anticipate it at high resistance liquidity.
+                    </p>
+                  </div>
+                  <label className="flex items-center gap-2 shrink-0 h-9 px-3 rounded-lg border border-slate-200 bg-white cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.deferredDelivery}
+                      onChange={(e) => {
+                        const on = e.target.checked
+                        setFormData((prev) => ({
+                          ...prev,
+                          deferredDelivery: on,
+                          ...(on
+                            ? deferredDefaults(prev.htfBias)
+                            : { deferCandle: "", opposingStops: "" }),
+                        }))
+                      }}
+                      className="rounded border-slate-300"
+                    />
+                    <span className="text-xs font-bold text-slate-700">
+                      This trade
+                    </span>
+                  </label>
+                </div>
+                {formData.deferredDelivery ? (
+                  <>
+                    <div className="flex flex-wrap gap-2">
+                      {DEFERRED_STEPS.map((step) => {
+                        const active = formData.deferredSteps.includes(step.id)
+                        return (
+                          <button
+                            key={step.id}
+                            type="button"
+                            title={step.description}
+                            onClick={() => toggleDeferredStep(step.id)}
+                            className={cn(
+                              "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                              active
+                                ? "border-[#2563EB] bg-[#2563EB] text-white"
+                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            )}
+                          >
+                            {step.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#94A3B8]">
+                        Defer candle
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {DEFER_CANDLES.map((candle) => (
+                          <button
+                            key={candle.id}
+                            type="button"
+                            title={candle.description}
+                            onClick={() =>
+                              handleChange("deferCandle", candle.id)
+                            }
+                            className={cn(
+                              "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                              formData.deferCandle === candle.id
+                                ? "border-[#2563EB] bg-[#2563EB] text-white"
+                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            )}
+                          >
+                            {candle.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#94A3B8]">
+                        Opposing liquidity run
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {OPPOSING_STOPS.map((pool) => (
+                          <button
+                            key={pool.id}
+                            type="button"
+                            title={pool.description}
+                            onClick={() =>
+                              handleChange("opposingStops", pool.id)
+                            }
+                            className={cn(
+                              "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                              formData.opposingStops === pool.id
+                                ? "border-[#2563EB] bg-[#2563EB] text-white"
+                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            )}
+                          >
+                            {pool.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs leading-relaxed text-slate-600">
+                      {formData.htfBias === "BEARISH"
+                        ? "Bearish: the lowest down-close at high resistance liquidity defers delivery up into buy stops. Wait for that run, then continue to the draw."
+                        : "Bullish: the highest up-close at high resistance liquidity defers delivery down into sell stops. Wait for that run, then continue higher to the draw."}
+                    </p>
+                  </>
+                ) : null}
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-slate-100 pt-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#94A3B8]">
+                    Range liquidity
+                  </span>
+                  <p className="text-xs leading-relaxed text-slate-500">
+                    The market rebalances an imbalance, or it runs an old high
+                    or low. It rotates from internal range liquidity to
+                    external, and back. That rotation is the next HTF candle.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {RANGE_LIQUIDITY.map((location) => (
+                    <button
+                      key={location.id}
+                      type="button"
+                      title={location.description}
+                      onClick={() => {
+                        handleChange("rangeLiquidity", location.id)
+                        if (location.id === "EXTERNAL") {
+                          handleChange("imbalanceType", "")
+                        }
+                        if (
+                          location.id === "INTERNAL" &&
+                          formData.externalPool === "OLD_HIGH"
+                        ) {
+                          handleChange("htfBias", "BULLISH")
+                        }
+                        if (
+                          location.id === "INTERNAL" &&
+                          formData.externalPool === "OLD_LOW"
+                        ) {
+                          handleChange("htfBias", "BEARISH")
+                        }
+                      }}
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                        formData.rangeLiquidity === location.id
+                          ? "border-[#2563EB] bg-[#2563EB] text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      )}
+                    >
+                      {location.label}
+                    </button>
+                  ))}
+                </div>
+                {formData.rangeLiquidity === "INTERNAL" ? (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#94A3B8]">
+                      Imbalance
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {IMBALANCES.map((imbalance) => (
+                        <button
+                          key={imbalance.id}
+                          type="button"
+                          title={imbalance.description}
+                          onClick={() =>
+                            handleChange("imbalanceType", imbalance.id)
+                          }
+                          className={cn(
+                            "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                            formData.imbalanceType === imbalance.id
+                              ? "border-[#2563EB] bg-[#2563EB] text-white"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          )}
+                        >
+                          {imbalance.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs leading-relaxed text-slate-500">
+                      Trading into this imbalance, the next candle seeks an old
+                      high or an old low.
+                    </p>
+                  </div>
+                ) : null}
+                {formData.rangeLiquidity ? (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#94A3B8]">
+                      {formData.rangeLiquidity === "INTERNAL"
+                        ? "Draw is an old high or low"
+                        : "Old high or low that was run"}
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {EXTERNAL_POOLS.map((pool) => (
+                        <button
+                          key={pool.id}
+                          type="button"
+                          title={pool.description}
+                          onClick={() => {
+                            handleChange("externalPool", pool.id)
+                            if (formData.rangeLiquidity === "INTERNAL") {
+                              handleChange(
+                                "htfBias",
+                                pool.id === "OLD_HIGH" ? "BULLISH" : "BEARISH"
+                              )
+                            }
+                          }}
+                          className={cn(
+                            "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                            formData.externalPool === pool.id
+                              ? "border-[#2563EB] bg-[#2563EB] text-white"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          )}
+                        >
+                          {pool.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs leading-relaxed text-slate-500">
+                      {formData.rangeLiquidity === "INTERNAL"
+                        ? "An old high sets the next candle up. An old low sets it down."
+                        : "That high or low is done. The next candle seeks an FVG."}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-slate-100 pt-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#94A3B8]">
+                    IPDA profile
+                  </span>
+                  <p className="text-xs leading-relaxed text-slate-500">
+                    Index futures consolidate about 52% of the time and expand
+                    about 48%. Into the 9:30 equity open, profile first, then
+                    only get in on the expansion.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {MARKET_PROFILES.map((profile) => (
+                    <button
+                      key={profile.id}
+                      type="button"
+                      title={profile.description}
+                      onClick={() => handleChange("setupType", profile.id)}
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-left transition-all",
+                        formData.setupType === profile.id
+                          ? "border-[#2563EB] bg-[#2563EB] text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      )}
+                    >
+                      <div className="text-[11px] font-bold">{profile.short}</div>
+                      <div
+                        className={cn(
+                          "text-[9px]",
+                          formData.setupType === profile.id
+                            ? "text-blue-100"
+                            : "text-slate-400"
+                        )}
+                      >
+                        {profile.label}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs leading-relaxed text-slate-600">
+                  {formData.setupType === "CONSOLIDATION"
+                    ? "Stay out. Consolidation only leads to expansion, and that is the move you trade. The range tells you a trend is close."
+                    : formData.setupType === "EXPANSION"
+                      ? "This is when you are in the market. Trade the expansion."
+                      : formData.setupType === "REVERSAL" ||
+                          formData.setupType === "RETRACEMENT"
+                        ? "This follows an expansion. It does not come straight out of consolidation."
+                        : "Consolidation always leads to expansion. It never leads to a reversal or a retracement."}
+                </p>
+                <div className="flex flex-col gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#94A3B8]">
+                    Out of consolidation
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {RANGE_RESOLUTIONS.map((path) => {
+                      const active = formData.liquiditySide === path.id
+                      return (
+                        <button
+                          key={path.id}
+                          type="button"
+                          title={path.description}
+                          onClick={() =>
+                            handleChange("liquiditySide", active ? "" : path.id)
+                          }
+                          className={cn(
+                            "rounded-lg border px-3 py-2 text-left text-[11px] font-bold transition-all",
+                            active
+                              ? "border-[#2563EB] bg-[#2563EB] text-white"
+                              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                          )}
+                        >
+                          {path.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <p className="text-xs leading-relaxed text-slate-500">
+                    Either a breakout with the bias, then a retracement long or
+                    short, or a stop run against the bias (AMD) before the
+                    expansion.
+                  </p>
                 </div>
               </div>
             </section>
@@ -873,7 +1546,7 @@ export function LogTradeModal() {
             <section className="flex flex-col gap-3">
               <div className="flex items-center gap-1.5">
                 <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">
-                  Confluence Checklist
+                  Checklist
                 </Label>
                 <Info className="h-3 w-3 text-[#94A3B8]" />
               </div>
@@ -902,7 +1575,7 @@ export function LogTradeModal() {
             <section className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <Label className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.05em]">
-                  Chart Screenshots (HTF / MTF / LTF)
+                  Charts (LTP / ITP / STP)
                 </Label>
                 <span className="text-[10px] font-medium text-[#94A3B8]">
                   {screenshots.length} files
@@ -956,12 +1629,12 @@ export function LogTradeModal() {
             {/* Psychology */}
             <div className="bg-[#F8FAFC] border-l-4 border-[#2563EB] rounded-lg p-5 flex flex-col gap-3">
               <span className="font-bold text-[#2563EB] text-sm">
-                Psychology Note — Be Honest
+                Psychology
               </span>
               <Textarea
                 value={formData.psychologyNote}
                 onChange={(e) => handleChange("psychologyNote", e.target.value)}
-                placeholder="Did you wait for HTF alignment + killzone + OTE, or did you force the entry?"
+                placeholder="Did the next candle point from an imbalance to an old high or low, or back to an FVG after a high or low was run?"
                 className="bg-white border-slate-200 min-h-[100px] rounded-lg text-sm resize-none"
               />
             </div>

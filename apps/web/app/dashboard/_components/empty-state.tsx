@@ -13,11 +13,11 @@ export function EmptyState() {
               Get started
             </p>
             <h2 className={cn(dashTitle, "text-lg lg:text-xl")}>
-              Journal your first SMC / ICT setup
+              Journal the next HTF candle
             </h2>
             <p className={cn(dashLabel, "text-sm max-w-xl leading-relaxed")}>
-              Log HTF bias, killzone, POI, OTE, and liquidity — then track which
-              models actually pay you.
+              Call the next higher-timeframe candle, name the draw on liquidity,
+              then log the lower-timeframe confirmation and the session.
             </p>
           </div>
 
@@ -38,18 +38,18 @@ export function EmptyState() {
         <div className="mt-6 pt-6 border-t border-[#E2E8F0] grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Tip
             icon={<Clock className="h-4 w-4 text-[#2563EB]" />}
-            title="Trade the killzone"
-            body="NY AM and London Open are tagged automatically in NY time."
+            title="Call one candle"
+            body="An imbalance draws the next HTF candle to an old high or low. A run on a high or low draws it back to an FVG."
           />
           <Tip
             icon={<Layers className="h-4 w-4 text-[#2563EB]" />}
-            title="Stack timeframes"
-            body="HTF bias → MTF structure → LTF entry model on every log."
+            title="Trade the range"
+            body="Pair it with a dealing range. At high resistance liquidity, delivery can defer into opposing stops before the draw."
           />
           <Tip
             icon={<GitBranch className="h-4 w-4 text-[#2563EB]" />}
-            title="Name the model"
-            body="OB, OTE, breaker, mitigation, or liquidity sweep — then compare."
+            title="Profile the open"
+            body="STP starts at 9:30 NY. Consolidation leads to expansion. Trade the expansion."
           />
         </div>
       </div>

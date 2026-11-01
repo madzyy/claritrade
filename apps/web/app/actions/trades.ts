@@ -3,7 +3,7 @@
 import { getOrCreatePrismaUser } from "@/lib/auth"
 import { getActiveJournal, syncJournalBalance } from "@/lib/journals"
 import {
-  calculateOteZone,
+  calculateRangeMid,
   calculateTradeMetrics,
   killzoneToSession,
   normalizePair,
@@ -103,7 +103,7 @@ export async function logTrade(formData: LogTradeInput) {
       return {
         success: false,
         error:
-          "Select the ICT killzone you traded (manual — not inferred from journal time).",
+          "Select the session you traded.",
       }
     }
     const killzone = formData.killzone as KillzoneId
@@ -113,16 +113,12 @@ export async function logTrade(formData: LogTradeInput) {
 
     const swingHigh = num(formData.swingHigh)
     const swingLow = num(formData.swingLow)
-    let oteHigh = null as number | null
-    let oteLow = null as number | null
-
-    if (swingHigh != null && swingLow != null) {
-      const ote = calculateOteZone(direction, swingHigh, swingLow)
-      if (ote) {
-        oteHigh = ote.oteHigh
-        oteLow = ote.oteLow
-      }
-    }
+    const rangeMid =
+      swingHigh != null && swingLow != null
+        ? calculateRangeMid(swingHigh, swingLow)
+        : null
+    const oteHigh = rangeMid
+    const oteLow = rangeMid
 
     const balance = journal.currentBalance
     const riskVal = num(formData.risk)
