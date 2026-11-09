@@ -33,7 +33,7 @@ export function Header({ journals = [], activeJournalId }: HeaderProps) {
         : "Dashboard"
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#E5E7EB] bg-white px-4 py-3 lg:h-auto lg:px-8 dark:border-white/10 dark:bg-neutral-900">
+    <header className="sticky top-0 z-30 flex h-16 min-w-0 items-center justify-between gap-2 border-b border-[#E5E7EB] bg-white px-3 py-3 sm:px-4 lg:h-auto lg:px-8 dark:border-white/10 dark:bg-neutral-900">
       <div className="lg:hidden">
         <Button
           variant="ghost"
@@ -44,7 +44,7 @@ export function Header({ journals = [], activeJournalId }: HeaderProps) {
         </Button>
       </div>
 
-      <div className="flex min-w-0 items-center gap-5">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-5">
         <div className="hidden items-center gap-3 lg:flex">
           <h1 className="text-xl font-semibold tracking-tight text-[#1E293B] dark:text-slate-100">
             {title}
@@ -78,7 +78,7 @@ export function Header({ journals = [], activeJournalId }: HeaderProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-10 w-10 rounded-full text-[#64748B] transition-all hover:bg-[#2563EB]/5 hover:text-[#2563EB] dark:text-slate-400 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
+          className="relative hidden h-10 w-10 rounded-full text-[#64748B] transition-all hover:bg-[#2563EB]/5 hover:text-[#2563EB] sm:flex dark:text-slate-400 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
         >
           <Bell className="h-5 w-5" />
           <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full border-2 border-white bg-[#2563EB] dark:border-neutral-900" />
@@ -90,9 +90,7 @@ export function Header({ journals = [], activeJournalId }: HeaderProps) {
         >
           <HelpCircle className="h-5 w-5" />
         </Button>
-        <div className="hidden lg:block">
-          <LogTradeModal />
-        </div>
+        <LogTradeModal />
       </div>
     </header>
   )

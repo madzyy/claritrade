@@ -13,11 +13,12 @@ export function EmptyState() {
               Get started
             </p>
             <h2 className={cn(dashTitle, "text-lg lg:text-xl")}>
-              Journal the next HTF candle
+              Align LTP, ITP, then STP
             </h2>
             <p className={cn(dashLabel, "text-sm max-w-xl leading-relaxed")}>
-              Call the next higher-timeframe candle, name the draw on liquidity,
-              then log the lower-timeframe confirmation and the session.
+              Same orderflow on all three perspectives before you execute. If
+              you have an LTP but cannot come to an ITP, stop. There is no
+              trade.
             </p>
           </div>
 
@@ -27,7 +28,7 @@ export function EmptyState() {
             </span>
             <Link
               href="/dashboard/import"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#E2E8F0] bg-white text-[#0F172A] text-sm font-semibold h-11 px-5 hover:bg-[#F8FAFC] transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#E2E8F0] bg-white text-[#0F172A] text-sm font-semibold h-11 px-5 hover:bg-[#F8FAFC] transition-colors dark:border-white/10 dark:bg-neutral-900 dark:text-slate-100 dark:hover:bg-white/5"
             >
               Import history
               <ArrowRight className="h-4 w-4 text-[#2563EB]" />
@@ -37,19 +38,19 @@ export function EmptyState() {
 
         <div className="mt-6 pt-6 border-t border-[#E2E8F0] grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Tip
-            icon={<Clock className="h-4 w-4 text-[#2563EB]" />}
-            title="Call one candle"
-            body="An imbalance draws the next HTF candle to an old high or low. A run on a high or low draws it back to an FVG."
-          />
-          <Tip
             icon={<Layers className="h-4 w-4 text-[#2563EB]" />}
-            title="Trade the range"
-            body="Pair it with a dealing range. At high resistance liquidity, delivery can defer into opposing stops before the draw."
+            title="STP · equity open 90min"
+            body="09:00–10:30 is the killzone. 09:30 is manipulation or distribution — print the questionnaire. Asia/London not overly extended. Accumulation → expect manipulation. Distribution if stops ran before 09:30. Then execute with no fear."
           />
           <Tip
             icon={<GitBranch className="h-4 w-4 text-[#2563EB]" />}
-            title="Profile the open"
-            body="STP starts at 9:30 NY. Consolidation leads to expansion. Trade the expansion."
+            title="ITP · walk to the DOL"
+            body="H4, H1, sometimes M30. Structure, ranges, and PD arrays into the LTP draw. No ITP, no STP."
+          />
+          <Tip
+            icon={<Clock className="h-4 w-4 text-[#2563EB]" />}
+            title="STP · time + signature"
+            body="M15 and lower. Only after LTP and ITP agree. Entry is time plus a specific signature of price."
           />
         </div>
       </div>
@@ -72,7 +73,7 @@ function Tip({
         {icon}
       </div>
       <div>
-        <p className="text-sm font-semibold text-[#0F172A]">{title}</p>
+        <p className="text-sm font-semibold text-[#0F172A] dark:text-slate-100">{title}</p>
         <p className={cn(dashLabel, "mt-0.5 leading-relaxed")}>{body}</p>
       </div>
     </div>

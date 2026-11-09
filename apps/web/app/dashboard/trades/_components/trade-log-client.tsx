@@ -11,6 +11,8 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select"
 import { cn } from "@workspace/ui/lib/utils"
+import { dashTableWrap, dashTd, dashTh } from "@/lib/dashboard-theme"
+import { pnlClass } from "../../_components/data-table"
 
 export type SerializedTrade = {
   id: string
@@ -42,6 +44,8 @@ export type SerializedTrade = {
 
 type Row = {
   id: string
+  pair: string
+  side: string
   size: string
   trade: string
   stopLoss: string
@@ -59,8 +63,25 @@ type Row = {
 
 const PAGE_SIZE = 12
 
+const COLUMNS = [
+  "Symbol",
+  "Side",
+  "Size",
+  "Entry",
+  "Stop loss",
+  "Take profit",
+  "Fees",
+  "Entry date",
+  "Exit date",
+  "Return ($)",
+  "Return (%)",
+  "Return (R)",
+  "Gross PnL",
+  "Exit price",
+] as const
+
 function formatNum(n: number | null | undefined, digits = 2) {
-  if (n == null || Number.isNaN(n)) return "-"
+  if (n == null || Number.isNaN(n)) return "—"
   return n.toLocaleString(undefined, {
     minimumFractionDigits: 0,
     maximumFractionDigits: digits,
@@ -68,9 +89,9 @@ function formatNum(n: number | null | undefined, digits = 2) {
 }
 
 function formatDate(date: string | null | undefined) {
-  if (!date) return "-"
+  if (!date) return "—"
   const d = new Date(date)
-  if (Number.isNaN(d.getTime())) return "-"
+  if (Number.isNaN(d.getTime())) return "—"
   return d.toLocaleString(undefined, {
     month: "numeric",
     day: "numeric",
@@ -81,15 +102,11 @@ function formatDate(date: string | null | undefined) {
 }
 
 function formatSigned(n: number | null | undefined) {
-  if (n == null || Number.isNaN(n)) return "-"
-  return `${n >= 0 ? "+" : "-"}${Math.abs(n).toFixed(2)}`
-}
-
-function pnlPill(n: number | null | undefined) {
-  if (n == null || Number.isNaN(n)) return "bg-white/5 text-slate-400"
-  return n >= 0
-    ? "bg-emerald-500/20 text-emerald-300"
-    : "bg-rose-500/20 text-rose-300"
+  if (n == null || Number.isNaN(n)) return "—"
+  const abs = Math.abs(n).toFixed(2)
+  if (n > 0) return `+${abs}`
+  if (n < 0) return `-${abs}`
+  return abs
 }
 
 function toRow(trade: SerializedTrade): Row {
@@ -98,13 +115,17 @@ function toRow(trade: SerializedTrade): Row {
     returnUsd != null && trade.accountBalance && trade.accountBalance > 0
       ? (returnUsd / trade.accountBalance) * 100
       : null
+  const dir = trade.direction.toUpperCase()
+  const side = dir === "BUY" || dir === "LONG" ? "Long" : "Short"
 
   return {
     id: trade.id,
+    pair: trade.pair,
+    side,
     size: formatNum(trade.lotSize, 2),
     trade: formatNum(trade.entry, 5),
     stopLoss: formatNum(trade.stopLoss, 5),
-    fees: "-",
+    fees: "—",
     takeProfit: formatNum(trade.takeProfit, 5),
     entryDate: formatDate(trade.dateOpened),
     exitDate: formatDate(trade.dateClosed ?? null),
@@ -144,10 +165,10 @@ export function TradeLogClient({
   }, [account, filterMode])
 
   return (
-    <div className="relative min-h-full flex flex-col gap-6 py-4 lg:py-6">
-      <div className="mx-4 lg:mx-8 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#0b0f17] px-3 py-2">
+    <div className="relative flex min-h-full flex-col gap-4 py-4 lg:py-6">
+      <div className="mx-4 flex flex-wrap items-center gap-2 lg:mx-8">
         <Select value={account} onValueChange={setAccount}>
-          <SelectTrigger className="h-8 w-[180px] rounded-md border-white/15 bg-[#111827] text-xs text-slate-200">
+          <SelectTrigger className="h-8 w-[180px] rounded-md border-[#E2E8F0] bg-white text-[13px] text-[#0F172A] dark:border-white/10 dark:bg-neutral-900 dark:text-slate-100">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -155,29 +176,29 @@ export function TradeLogClient({
           </SelectContent>
         </Select>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1">
           <button
             type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-slate-400 hover:text-slate-200"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] dark:hover:bg-white/5 dark:hover:text-slate-100"
           >
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 text-slate-400 hover:text-slate-200"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] dark:hover:bg-white/5 dark:hover:text-slate-100"
           >
             <PencilLine className="h-3.5 w-3.5" />
           </button>
-          <span className="mx-1 h-5 w-px bg-white/10" />
-          <span className="text-xs text-slate-400">Filter by</span>
+          <span className="mx-1 h-4 w-px bg-[#E2E8F0] dark:bg-white/10" />
+          <span className="text-[12px] text-[#64748B]">Filter</span>
           <button
             type="button"
             onClick={() => setFilterMode("basic")}
             className={cn(
-              "rounded-md border px-2.5 py-1 text-xs",
+              "rounded-md px-2 py-1 text-[12px] font-medium",
               filterMode === "basic"
-                ? "border-white/25 bg-white/10 text-slate-100"
-                : "border-white/15 text-slate-400"
+                ? "bg-[#EFF6FF] text-[#2563EB] dark:bg-blue-500/15 dark:text-blue-400"
+                : "text-[#64748B] hover:text-[#0F172A] dark:hover:text-slate-100"
             )}
           >
             Basic
@@ -186,10 +207,10 @@ export function TradeLogClient({
             type="button"
             onClick={() => setFilterMode("tags")}
             className={cn(
-              "rounded-md border px-2.5 py-1 text-xs",
+              "rounded-md px-2 py-1 text-[12px] font-medium",
               filterMode === "tags"
-                ? "border-white/25 bg-white/10 text-slate-100"
-                : "border-white/15 text-slate-400"
+                ? "bg-[#EFF6FF] text-[#2563EB] dark:bg-blue-500/15 dark:text-blue-400"
+                : "text-[#64748B] hover:text-[#0F172A] dark:hover:text-slate-100"
             )}
           >
             Tags
@@ -198,29 +219,12 @@ export function TradeLogClient({
       </div>
 
       <section className="mx-4 lg:mx-8">
-        <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#0b0f17]">
-          <table className="min-w-[1650px] w-full">
+        <div className={dashTableWrap}>
+          <table className="min-w-[1400px] w-full border-collapse">
             <thead>
-              <tr className="border-b border-white/10">
-                {[
-                  "Size",
-                  "Trade",
-                  "Stop loss",
-                  "Fees",
-                  "Take profit",
-                  "Entry date",
-                  "Exit date",
-                  "Return ($)",
-                  "Return (%)",
-                  "Return (R)",
-                  "Entry price",
-                  "Gross PnL",
-                  "Exit price",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="px-3 py-3 text-left text-[12px] font-medium text-slate-400"
-                  >
+              <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] dark:border-white/10 dark:bg-white/[0.03]">
+                {COLUMNS.map((h) => (
+                  <th key={h} className={dashTh}>
                     {h}
                   </th>
                 ))}
@@ -229,7 +233,10 @@ export function TradeLogClient({
             <tbody>
               {pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="px-6 py-16 text-center text-sm text-slate-400">
+                  <td
+                    colSpan={COLUMNS.length}
+                    className="px-4 py-16 text-center text-[13px] text-[#64748B]"
+                  >
                     No trades match these filters.
                   </td>
                 </tr>
@@ -237,33 +244,34 @@ export function TradeLogClient({
                 pageRows.map((row) => (
                   <tr
                     key={row.id}
-                    className="border-b border-white/5 transition-colors hover:bg-white/[0.03] last:border-0"
+                    className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC] dark:border-white/10 dark:hover:bg-white/[0.03]"
                   >
-                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-100">{row.size}</td>
-                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">{row.trade}</td>
-                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">{row.stopLoss}</td>
-                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-500">{row.fees}</td>
-                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">{row.takeProfit}</td>
-                    <td className="px-3 py-3 text-[13px] text-slate-400">{row.entryDate}</td>
-                    <td className="px-3 py-3 text-[13px] text-slate-400">{row.exitDate}</td>
-                    <td className="px-3 py-3">
-                      <span className={cn("rounded-md px-2 py-1 text-[11px] font-semibold", pnlPill(row.returnUsd))}>
-                        {formatSigned(row.returnUsd)}
-                      </span>
+                    <td className={cn(dashTd, "font-medium")}>{row.pair}</td>
+                    <td className={dashTd}>{row.side}</td>
+                    <td className={dashTd}>{row.size}</td>
+                    <td className={dashTd}>{row.trade}</td>
+                    <td className={dashTd}>{row.stopLoss}</td>
+                    <td className={dashTd}>{row.takeProfit}</td>
+                    <td className={cn(dashTd, "text-[#64748B]")}>{row.fees}</td>
+                    <td className={cn(dashTd, "text-[#475569] dark:text-slate-400")}>
+                      {row.entryDate}
                     </td>
-                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">
-                      {row.returnPct == null ? "0%" : `${row.returnPct.toFixed(2)}%`}
+                    <td className={cn(dashTd, "text-[#475569] dark:text-slate-400")}>
+                      {row.exitDate}
                     </td>
-                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">
-                      {row.returnR == null ? "N/A" : row.returnR.toFixed(2)}
+                    <td className={cn(dashTd, pnlClass(row.returnUsd))}>
+                      {formatSigned(row.returnUsd)}
                     </td>
-                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">{row.entryPrice}</td>
-                    <td className="px-3 py-3">
-                      <span className={cn("rounded-md px-2 py-1 text-[11px] font-semibold", pnlPill(row.grossPnl))}>
-                        {formatSigned(row.grossPnl)}
-                      </span>
+                    <td className={dashTd}>
+                      {row.returnPct == null ? "—" : `${row.returnPct.toFixed(2)}%`}
                     </td>
-                    <td className="px-3 py-3 text-[13px] tabular-nums text-slate-300">{row.exitPrice}</td>
+                    <td className={dashTd}>
+                      {row.returnR == null ? "—" : row.returnR.toFixed(2)}
+                    </td>
+                    <td className={cn(dashTd, pnlClass(row.grossPnl))}>
+                      {formatSigned(row.grossPnl)}
+                    </td>
+                    <td className={dashTd}>{row.exitPrice}</td>
                   </tr>
                 ))
               )}
@@ -272,28 +280,35 @@ export function TradeLogClient({
         </div>
       </section>
 
-      <div className="mx-4 lg:mx-8 flex items-center justify-between">
-        <div className="text-[12px] text-slate-400">
-          Showing <span className="font-semibold text-slate-100">{pageRows.length}</span> of{" "}
-          <span className="font-semibold text-slate-100">{filtered.length}</span> trades
+      <div className="mx-4 flex items-center justify-between lg:mx-8">
+        <div className="text-[12px] text-[#64748B]">
+          Showing{" "}
+          <span className="font-medium text-[#0F172A] dark:text-slate-100">
+            {pageRows.length}
+          </span>{" "}
+          of{" "}
+          <span className="font-medium text-[#0F172A] dark:text-slate-100">
+            {filtered.length}
+          </span>{" "}
+          trades
         </div>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-lg text-[#94A3B8]"
+            className="h-8 w-8 rounded-md text-[#64748B]"
             disabled={safePage <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="px-2 text-[12px] font-semibold text-[#64748B]">
+          <span className="px-2 text-[12px] font-medium text-[#475569]">
             {safePage} / {totalPages}
           </span>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-lg text-[#94A3B8]"
+            className="h-8 w-8 rounded-md text-[#64748B]"
             disabled={safePage >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           >

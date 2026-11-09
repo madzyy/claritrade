@@ -109,7 +109,7 @@ export function SmcOverview({
         })}
       </TableSection>
 
-      <TableSection title="Next HTF candle">
+      <TableSection title="Next daily candle">
         <TableHeader columns={[...COLS]} />
         {BIAS_OPTIONS.map((bias) => {
           const bucket = byBias[bias.id]

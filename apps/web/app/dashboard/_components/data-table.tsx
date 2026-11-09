@@ -2,11 +2,10 @@ import type { ReactNode } from "react"
 import { cn } from "@workspace/ui/lib/utils"
 
 /**
- * TradeZella-style metrics table.
- * One CSS grid for header + rows so columns always align.
+ * Compact journal table — one CSS grid so header + rows stay aligned.
  */
 export const METRICS_GRID =
-  "grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_72px_132px_100px_92px] lg:gap-x-6"
+  "grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_72px_132px_100px_92px] lg:gap-x-4"
 
 export function TableSection({
   title,
@@ -21,13 +20,13 @@ export function TableSection({
 }) {
   return (
     <section className={cn("mx-4 lg:mx-8", className)}>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h3 className="text-[15px] font-semibold tracking-tight text-[#1E293B] dark:text-slate-100">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <h3 className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">
           {title}
         </h3>
         {action}
       </div>
-      <div className="overflow-hidden rounded-xl border border-[#E5E7EB] bg-white dark:border-white/10 dark:bg-neutral-900">
+      <div className="overflow-hidden rounded-lg border border-[#E2E8F0] bg-white dark:border-white/10 dark:bg-neutral-900">
         {children}
       </div>
     </section>
@@ -43,14 +42,14 @@ export function TableHeader({
     <div
       className={cn(
         METRICS_GRID,
-        "hidden border-b border-[#F1F5F9] px-5 py-3 lg:grid lg:px-6 dark:border-white/5"
+        "hidden border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 lg:grid dark:border-white/10 dark:bg-white/[0.03]"
       )}
     >
       <div />
       {columns.map((col) => (
         <div
           key={col}
-          className="text-right text-[12px] font-medium text-[#94A3B8] dark:text-slate-500"
+          className="text-right text-[11px] font-medium text-[#64748B] dark:text-slate-400"
         >
           {col}
         </div>
@@ -73,8 +72,8 @@ export function TableRow({
       onClick={onClick}
       className={cn(
         METRICS_GRID,
-        "items-center border-b border-[#F1F5F9] px-5 py-[18px] last:border-b-0 lg:px-6 dark:border-white/5",
-        "hover:bg-[#F8FAFC]/80 transition-colors dark:hover:bg-white/[0.03]",
+        "items-center border-b border-[#E2E8F0] px-4 py-2.5 last:border-b-0 lg:px-4 dark:border-white/10",
+        "hover:bg-[#F8FAFC] transition-colors dark:hover:bg-white/[0.03]",
         onClick && "cursor-pointer",
         className
       )}
@@ -92,12 +91,12 @@ export function TableLabel({
   subtitle?: ReactNode
 }) {
   return (
-    <div className="min-w-0 pr-2 mb-3 lg:mb-0">
-      <div className="truncate text-[14px] font-semibold text-[#1E293B] leading-5 dark:text-slate-100">
+    <div className="min-w-0 pr-2 mb-2 lg:mb-0">
+      <div className="truncate text-[13px] font-medium text-[#0F172A] leading-5 dark:text-slate-100">
         {title}
       </div>
       {subtitle ? (
-        <div className="mt-0.5 truncate text-[12px] font-normal text-[#94A3B8] leading-4 dark:text-slate-500">
+        <div className="mt-0.5 truncate text-[12px] font-normal text-[#64748B] leading-4 dark:text-slate-400">
           {subtitle}
         </div>
       ) : null}
@@ -117,13 +116,13 @@ export function TableCell({
   return (
     <div className="flex items-center justify-between gap-3 lg:block lg:text-right">
       {label ? (
-        <span className="text-[12px] font-medium text-[#94A3B8] lg:hidden dark:text-slate-500">
+        <span className="text-[12px] font-medium text-[#64748B] lg:hidden dark:text-slate-400">
           {label}
         </span>
       ) : null}
       <div
         className={cn(
-          "text-[14px] font-semibold tabular-nums leading-5 text-[#1E293B] dark:text-slate-100",
+          "text-[13px] font-medium tabular-nums leading-5 text-[#0F172A] dark:text-slate-100",
           className
         )}
       >
@@ -158,8 +157,8 @@ export function formatPf(n: number | null | undefined) {
 
 export function pnlClass(n: number | null | undefined) {
   if (n == null || n === 0) {
-    return "text-[#1E293B] dark:text-slate-100"
+    return "text-[#0F172A] dark:text-slate-100"
   }
-  if (n > 0) return "text-[#3B82F6] dark:text-blue-400"
-  return "text-[#EF4444] dark:text-red-400"
+  if (n > 0) return "text-[#2563EB] dark:text-blue-400"
+  return "text-[#DC2626] dark:text-red-400"
 }

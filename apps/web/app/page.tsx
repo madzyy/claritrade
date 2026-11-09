@@ -82,6 +82,15 @@ export default function Page() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [mobileMenuOpen])
+
   const toggleFaq = (index: number) => {
     setActiveFaq(activeFaq === index ? null : index)
   }
@@ -97,8 +106,13 @@ export default function Page() {
             : "border-b border-transparent"
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <Logo width={140} height={40} priority />
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:h-16 sm:gap-4 sm:px-6 lg:px-8">
+          <span className="sm:hidden">
+            <Logo width={120} height={34} priority />
+          </span>
+          <span className="hidden sm:block">
+            <Logo width={140} height={40} priority />
+          </span>
 
           <nav className="hidden items-center gap-8 md:flex" aria-label="Main">
             {navLinks.map((link) => (
@@ -184,11 +198,11 @@ export default function Page() {
       </header>
 
       {/* Hero */}
-      <section className="relative flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <section className="relative flex min-h-[calc(100dvh-3.5rem)] flex-col items-center justify-center px-4 py-10 sm:min-h-[calc(100dvh-4rem)] sm:px-6 sm:py-12 lg:px-8">
         <div className="mx-auto w-full max-w-4xl text-center">
-          <h1 className="text-5xl font-medium tracking-tight text-neutral-900 sm:text-6xl sm:leading-[1.1] dark:text-white">
+          <h1 className="text-[2rem] font-medium leading-[1.15] tracking-tight text-neutral-900 sm:text-5xl sm:leading-[1.1] md:text-6xl dark:text-white">
             Trading journals{" "}
-            <span className="relative inline-block whitespace-nowrap">
+            <span className="relative inline-block">
               <span className="relative z-10 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
                 made simple
               </span>
@@ -200,7 +214,7 @@ export default function Page() {
             for serious traders.
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-600 dark:text-neutral-400">
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-neutral-600 sm:mt-6 sm:text-lg sm:leading-8 dark:text-neutral-400">
             Most trading journals are powerful, but painful to use. ClariTrade
             syncs your trades with economic news, tracks psychology tags, and
             surfaces the patterns that actually move your P&amp;L.
@@ -237,7 +251,7 @@ export default function Page() {
 
       {/* Stats Proof Row */}
       <section className="border-y border-neutral-100 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/10 py-12 px-4 sm:px-6 lg:px-8 z-10 relative">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 text-center">
           {[
             { label: "Trades Journaled", value: "1.4M+" },
             { label: "Win Rate Improvement", value: "+14.2%" },
@@ -245,8 +259,8 @@ export default function Page() {
             { label: "Data Uptime", value: "99.99%" }
           ].map((stat, i) => (
             <div key={i} className="space-y-1">
-              <p className="text-3xl sm:text-4xl font-extrabold text-blue-600 dark:text-blue-400 tracking-tight">{stat.value}</p>
-              <p className="text-xs sm:text-sm font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">{stat.label}</p>
+              <p className="text-2xl sm:text-4xl font-extrabold text-blue-600 dark:text-blue-400 tracking-tight">{stat.value}</p>
+              <p className="text-[10px] sm:text-sm font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wide sm:tracking-widest leading-snug px-1">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -257,7 +271,7 @@ export default function Page() {
         <div className="max-w-7xl mx-auto space-y-16">
           <div className="text-center space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">Built for Serious Traders</h2>
-            <h3 className="text-3xl font-medium tracking-tight text-neutral-900 lg:text-4xl dark:text-white">
+            <h3 className="text-2xl font-medium tracking-tight text-neutral-900 sm:text-3xl lg:text-4xl dark:text-white px-1">
               Eliminate guesswork. Keep trade execution flawless.
             </h3>
           </div>
@@ -287,7 +301,7 @@ export default function Page() {
               return (
                 <div 
                   key={i} 
-                  className="p-8 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/40 rounded-2xl hover:border-neutral-300 dark:hover:border-neutral-700 transition-all hover:-translate-y-1 duration-300 flex flex-col justify-between"
+                  className="p-6 sm:p-8 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/40 rounded-2xl hover:border-neutral-300 dark:hover:border-neutral-700 transition-all sm:hover:-translate-y-1 duration-300 flex flex-col justify-between"
                 >
                   <div className="space-y-4">
                     <div className={`h-12 w-12 rounded-xl flex items-center justify-center border ${feat.color}`}>
@@ -313,7 +327,7 @@ export default function Page() {
             <Badge variant="outline" className="text-blue-600 dark:text-blue-400 bg-blue-500/5 border-blue-500/20 px-3 py-1 font-bold text-[10px] uppercase tracking-wider">
               Interactive Preview
             </Badge>
-            <h2 className="text-3xl font-medium tracking-tight text-neutral-900 lg:text-4xl dark:text-white">
+            <h2 className="text-2xl font-medium tracking-tight text-neutral-900 sm:text-3xl lg:text-4xl dark:text-white">
               Explore ClariTrade Sandbox
             </h2>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">
@@ -339,14 +353,14 @@ export default function Page() {
           
           <div className="text-center space-y-4">
             <h2 className="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">Simple Transparent Pricing</h2>
-            <h3 className="text-3xl font-medium tracking-tight text-neutral-900 lg:text-4xl dark:text-white">
+            <h3 className="text-2xl font-medium tracking-tight text-neutral-900 sm:text-3xl lg:text-4xl dark:text-white px-1">
               An investment that pays for itself in one disciplined trade.
             </h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Tier */}
-            <div className="p-8 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/30 flex flex-col justify-between space-y-8 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+            <div className="p-6 sm:p-8 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/30 flex flex-col justify-between space-y-8 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
               <div className="space-y-6">
                 <div>
                   <h4 className="text-lg font-bold text-neutral-500 uppercase tracking-wider">Free Starter</h4>
@@ -387,7 +401,7 @@ export default function Page() {
             </div>
 
             {/* Pro Tier */}
-            <div className="p-8 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-500/[0.02] dark:bg-blue-500/[0.04] flex flex-col justify-between space-y-8 relative overflow-hidden">
+            <div className="p-6 sm:p-8 rounded-2xl border-2 border-blue-600 dark:border-blue-500 bg-blue-500/[0.02] dark:bg-blue-500/[0.04] flex flex-col justify-between space-y-8 relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-blue-600 text-white font-extrabold text-[9px] uppercase px-4 py-1 rounded-bl-xl tracking-wider">
                 Recommended
               </div>
@@ -446,7 +460,7 @@ export default function Page() {
         <div className="max-w-3xl mx-auto space-y-12">
           
           <div className="text-center space-y-4">
-            <h3 className="text-3xl font-medium tracking-tight text-neutral-900 dark:text-white">Frequently Asked Questions</h3>
+            <h3 className="text-2xl font-medium tracking-tight text-neutral-900 sm:text-3xl dark:text-white">Frequently Asked Questions</h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">Have questions? We have answers.</p>
           </div>
 
@@ -460,11 +474,11 @@ export default function Page() {
                 >
                   <button
                     onClick={() => toggleFaq(index)}
-                    className="w-full py-5 px-6 flex justify-between items-center text-left font-bold text-sm sm:text-base text-neutral-900 dark:text-white"
+                    className="w-full py-4 px-4 sm:py-5 sm:px-6 flex justify-between items-start gap-3 text-left font-bold text-sm sm:text-base text-neutral-900 dark:text-white"
                   >
-                    <span className="flex items-center gap-2.5">
-                      <HelpCircle className="h-4 w-4 text-blue-500 shrink-0" />
-                      {faq.question}
+                    <span className="flex items-start gap-2.5 min-w-0">
+                      <HelpCircle className="mt-0.5 h-4 w-4 text-blue-500 shrink-0" />
+                      <span className="text-pretty">{faq.question}</span>
                     </span>
                     <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform duration-300 shrink-0 ${
                       isOpen ? "transform rotate-180" : ""
@@ -472,9 +486,9 @@ export default function Page() {
                   </button>
 
                   <div className={`transition-all duration-300 ease-in-out ${
-                    isOpen ? "max-h-[300px] border-t border-neutral-100 dark:border-neutral-800/80" : "max-h-0 overflow-hidden"
+                    isOpen ? "max-h-[min(24rem,70dvh)] overflow-y-auto border-t border-neutral-100 dark:border-neutral-800/80" : "max-h-0 overflow-hidden"
                   }`}>
-                    <p className="p-6 text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed font-medium">
+                    <p className="p-4 sm:p-6 text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed font-medium">
                       {faq.answer}
                     </p>
                   </div>
@@ -488,18 +502,18 @@ export default function Page() {
 
       {/* CTA Bottom Banner */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 z-10 relative text-center">
-        <div className="max-w-4xl mx-auto p-12 lg:p-16 rounded-3xl bg-neutral-900 text-white relative overflow-hidden shadow-2xl">
+        <div className="max-w-4xl mx-auto p-6 sm:p-12 lg:p-16 rounded-2xl sm:rounded-3xl bg-neutral-900 text-white relative overflow-hidden shadow-2xl">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.2),transparent_40%)]" />
           
           <div className="relative z-10 space-y-6 max-w-2xl mx-auto">
-            <h2 className="text-3xl font-medium tracking-tight lg:text-4xl">
+            <h2 className="text-2xl font-medium tracking-tight sm:text-3xl lg:text-4xl">
               Ready to claim your edge?
             </h2>
             <p className="text-sm sm:text-base text-neutral-400 leading-relaxed font-medium">
               Join thousands of traders worldwide who use ClariTrade to manage capital, catalog statistics, and enforce trading discipline.
             </p>
             <div className="pt-2">
-              <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-8 py-6 rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all">
+              <Button asChild size="lg" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-8 py-6 rounded-xl shadow-lg hover:shadow-blue-500/20 transition-all">
                 <Link href="/signup">Get Started For Free</Link>
               </Button>
             </div>
@@ -510,12 +524,12 @@ export default function Page() {
       {/* Footer */}
       <footer className="border-t border-neutral-100 dark:border-neutral-900 bg-white dark:bg-neutral-950 py-12 px-4 sm:px-6 lg:px-8 text-center text-xs font-semibold text-neutral-400 dark:text-neutral-500 transition-colors duration-300">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-center sm:text-left">
             <Logo variant="icon" width={28} height={28} href={undefined} />
             <span>© {new Date().getFullYear()} ClariTrade Inc. All rights reserved.</span>
           </div>
 
-          <div className="flex gap-6">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <a href="#" className="hover:text-blue-500 transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-blue-500 transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-blue-500 transition-colors">Risk Disclaimer</a>
