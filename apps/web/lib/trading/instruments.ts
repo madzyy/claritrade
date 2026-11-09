@@ -114,6 +114,24 @@ const INSTRUMENTS: Record<string, InstrumentSpec> = {
     pipSize: 0.01,
     decimals: 2,
   },
+  NQ: {
+    symbol: "NQ",
+    label: "NQ (E-mini Nasdaq)",
+    category: "index",
+    /** $20 per index point per contract. */
+    pointValue: 20,
+    pipSize: 0.25,
+    decimals: 2,
+  },
+  MNQ: {
+    symbol: "MNQ",
+    label: "MNQ (Micro Nasdaq)",
+    category: "index",
+    /** $2 per index point per contract. */
+    pointValue: 2,
+    pipSize: 0.25,
+    decimals: 2,
+  },
   NAS100: {
     symbol: "NAS100",
     label: "NAS100 (Nasdaq)",

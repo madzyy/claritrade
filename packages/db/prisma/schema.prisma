@@ -16,15 +16,19 @@ model User {
 }
 
 model Journal {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  name        String
-  description String?
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
-  trades      Trade[]
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  name            String
+  description     String?
+  /// Balance when the journal was created
+  startingBalance Float    @default(10000)
+  /// Running equity = starting + closed trade P&L
+  currentBalance  Float    @default(10000)
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+  trades          Trade[]
 
   @@unique([userId, name])
   @@index([userId])

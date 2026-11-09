@@ -1,4 +1,4 @@
-import { KILLZONES, SETUP_TYPES } from "@/lib/trading"
+import { BIAS_OPTIONS, KILLZONES, MARKET_PROFILES, formatSessionWindow } from "@/lib/trading"
 import {
   TableSection,
   TableHeader,
@@ -21,7 +21,8 @@ type Bucket = {
 
 interface SmcOverviewProps {
   byKillzone: Record<string, Bucket>
-  bySetup: Record<string, Bucket>
+  byBias: Record<string, Bucket>
+  byProfile: Record<string, Bucket>
   hasTrades: boolean
 }
 
@@ -38,20 +39,17 @@ function profitFactor(bucket?: Bucket) {
   return bucket.grossWin / bucket.grossLoss
 }
 
-function endLabel(endHour: number) {
-  return `${String(endHour).padStart(2, "0")}:00`
-}
-
 const COLS = ["Trades", "Net Profit / Loss", "Profit Factor", "Win Rate"] as const
 
 export function SmcOverview({
   byKillzone,
-  bySetup,
+  byBias,
+  byProfile,
   hasTrades,
 }: SmcOverviewProps) {
   return (
     <div className="flex flex-col gap-8">
-      <TableSection title="Killzone edge">
+      <TableSection title="Sessions">
         <TableHeader columns={[...COLS]} />
         {KILLZONES.map((kz) => {
           const bucket = byKillzone[kz.id]
@@ -60,10 +58,7 @@ export function SmcOverview({
           const has = Boolean(bucket?.total)
           return (
             <TableRow key={kz.id}>
-              <TableLabel
-                title={kz.label}
-                subtitle={`${String(kz.startHour).padStart(2, "0")}:00–${endLabel(kz.endHour)} NY`}
-              />
+              <TableLabel title={kz.label} subtitle={formatSessionWindow(kz)} />
               <TableCell label="Trades">
                 {has ? bucket!.total : hasTrades ? "0" : "—"}
               </TableCell>
@@ -84,16 +79,46 @@ export function SmcOverview({
         })}
       </TableSection>
 
-      <TableSection title="Setup performance">
+      <TableSection title="Market profile">
         <TableHeader columns={[...COLS]} />
-        {SETUP_TYPES.map((setup) => {
-          const bucket = bySetup[setup.id]
+        {MARKET_PROFILES.map((profile) => {
+          const bucket = byProfile[profile.id]
           const wr = rate(bucket)
           const pf = profitFactor(bucket)
           const has = Boolean(bucket?.total)
           return (
-            <TableRow key={setup.id}>
-              <TableLabel title={setup.label} subtitle={setup.short} />
+            <TableRow key={profile.id}>
+              <TableLabel title={profile.label} subtitle="IPDA" />
+              <TableCell label="Trades">
+                {has ? bucket!.total : hasTrades ? "0" : "—"}
+              </TableCell>
+              <TableCell
+                label="Net P/L"
+                className={has ? pnlClass(bucket!.pnl) : undefined}
+              >
+                {has ? formatUsd(bucket!.pnl) : "—"}
+              </TableCell>
+              <TableCell label="Profit Factor">
+                {has ? formatPf(pf) : "—"}
+              </TableCell>
+              <TableCell label="Win Rate">
+                {wr != null ? formatPct(wr) : "—"}
+              </TableCell>
+            </TableRow>
+          )
+        })}
+      </TableSection>
+
+      <TableSection title="Next daily candle">
+        <TableHeader columns={[...COLS]} />
+        {BIAS_OPTIONS.map((bias) => {
+          const bucket = byBias[bias.id]
+          const wr = rate(bucket)
+          const pf = profitFactor(bucket)
+          const has = Boolean(bucket?.total)
+          return (
+            <TableRow key={bias.id}>
+              <TableLabel title={bias.label} subtitle="LTP" />
               <TableCell label="Trades">
                 {has ? bucket!.total : hasTrades ? "0" : "—"}
               </TableCell>

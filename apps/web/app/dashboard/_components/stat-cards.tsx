@@ -38,7 +38,7 @@ export function StatCards({ stats }: StatCardsProps) {
             >
               {stat.value}
             </span>
-            <p className="text-[11px] text-[#94A3B8] truncate dark:text-slate-500">
+            <p className="text-[12px] text-[#64748B] truncate dark:text-slate-400">
               {stat.hint}
             </p>
           </div>

@@ -37,12 +37,14 @@ export default async function DashboardPage() {
       : []
 
   const statsCalc = computeJournalStats(allTrades)
-  const chartData = buildEquityCurve(allTrades, 10_000)
+  const startBal = journal?.startingBalance ?? 10_000
+  const chartData = buildEquityCurve(allTrades, startBal)
   const hasTrades = allTrades.length > 0
   const closed = allTrades.filter((t) => t.outcome && t.outcome !== "PENDING")
 
   const byKillzone: Record<string, Bucket> = {}
-  const bySetup: Record<string, Bucket> = {}
+  const byBias: Record<string, Bucket> = {}
+  const byProfile: Record<string, Bucket> = {}
 
   for (const t of closed) {
     const result = t.result ?? 0
@@ -54,13 +56,21 @@ export default async function DashboardPage() {
     if (result < 0) byKillzone[kz]!.grossLoss += Math.abs(result)
     if (t.outcome === "WIN") byKillzone[kz]!.wins += 1
 
-    const setup = t.setupType || "OTHER"
-    bySetup[setup] ??= emptyBucket()
-    bySetup[setup]!.total += 1
-    bySetup[setup]!.pnl += result
-    if (result > 0) bySetup[setup]!.grossWin += result
-    if (result < 0) bySetup[setup]!.grossLoss += Math.abs(result)
-    if (t.outcome === "WIN") bySetup[setup]!.wins += 1
+    const bias = t.htfBias || "UNSET"
+    byBias[bias] ??= emptyBucket()
+    byBias[bias]!.total += 1
+    byBias[bias]!.pnl += result
+    if (result > 0) byBias[bias]!.grossWin += result
+    if (result < 0) byBias[bias]!.grossLoss += Math.abs(result)
+    if (t.outcome === "WIN") byBias[bias]!.wins += 1
+
+    const profile = t.setupType || "UNSET"
+    byProfile[profile] ??= emptyBucket()
+    byProfile[profile]!.total += 1
+    byProfile[profile]!.pnl += result
+    if (result > 0) byProfile[profile]!.grossWin += result
+    if (result < 0) byProfile[profile]!.grossLoss += Math.abs(result)
+    if (t.outcome === "WIN") byProfile[profile]!.wins += 1
   }
 
   const pnlTone =
@@ -108,7 +118,7 @@ export default async function DashboardPage() {
           ? `${statsCalc.totalTrades - statsCalc.closedTrades} still open`
           : hasTrades
             ? "All closed"
-            : "Log an SMC setup to begin",
+            : "Log an NQ trade to begin",
       tone: "neutral" as const,
       icon: BarChart3,
     },
@@ -123,11 +133,12 @@ export default async function DashboardPage() {
       <PerformanceChart
         data={chartData}
         hasTrades={closed.length > 0}
-        startingBalance={10_000}
+        startingBalance={startBal}
       />
       <SmcOverview
         byKillzone={byKillzone}
-        bySetup={bySetup}
+        byBias={byBias}
+        byProfile={byProfile}
         hasTrades={hasTrades}
       />
       {recent.length > 0 ? <RecentTrades trades={recent} /> : <EmptyState />}

@@ -28,7 +28,7 @@ import {
 import { signOut } from "@/app/actions/auth"
 
 const navItems = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutGrid },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, exact: true },
   { name: "Trade Log", href: "/dashboard/trades", icon: NotebookText },
   { name: "Import", href: "/dashboard/import", icon: Upload },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
@@ -48,6 +48,11 @@ function displayName(email?: string | null, name?: string | null) {
     .replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
+function isActivePath(pathname: string, href: string, exact?: boolean) {
+  if (exact) return pathname === href
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
+
 export function Sidebar({ userEmail, userName }: SidebarProps) {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = React.useState(false)
@@ -57,14 +62,14 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "relative hidden h-full flex-col border-r border-[#E5E7EB] bg-white p-4 font-sans transition-all duration-500 ease-in-out lg:flex dark:border-white/10 dark:bg-neutral-900",
-        isCollapsed ? "w-20" : "w-64"
+        "relative hidden h-full shrink-0 flex-col border-r border-[#E5E7EB] bg-white font-sans transition-[width] duration-200 ease-out lg:flex dark:border-white/10 dark:bg-neutral-900",
+        isCollapsed ? "w-14" : "w-56"
       )}
     >
       <button
         type="button"
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-20 z-50 flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#64748B] shadow-sm transition-colors hover:text-[#2563EB] dark:border-white/10 dark:bg-neutral-900 dark:text-slate-400 dark:hover:text-blue-400"
+        className="absolute -right-3 top-[58px] z-50 flex h-6 w-6 items-center justify-center rounded-full border border-[#E5E7EB] bg-white text-[#64748B] hover:text-[#2563EB] dark:border-white/10 dark:bg-neutral-900 dark:text-slate-400 dark:hover:text-blue-400"
         aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
         {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -72,97 +77,70 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
 
       <div
         className={cn(
-          "relative mb-8 flex h-12 items-center overflow-hidden transition-all duration-500",
-          isCollapsed ? "justify-center" : "justify-start"
+          "flex h-14 shrink-0 items-center",
+          isCollapsed ? "justify-center px-0" : "px-4"
         )}
       >
-        <div
-          className={cn(
-            "absolute transition-all duration-500 ease-in-out",
-            isCollapsed
-              ? "pointer-events-none -translate-x-6 scale-90 opacity-0"
-              : "translate-x-0 scale-100 opacity-100"
-          )}
-        >
-          <Logo theme="auto" width={160} height={48} href={undefined} />
-        </div>
-        <div
-          className={cn(
-            "absolute transition-all duration-500 ease-in-out",
-            isCollapsed
-              ? "translate-x-0 scale-100 opacity-100"
-              : "pointer-events-none translate-x-6 scale-90 opacity-0"
-          )}
-        >
-          <Logo variant="icon" width={40} height={40} href={undefined} />
-        </div>
+        {isCollapsed ? (
+          <Logo variant="icon" width={28} height={28} href={undefined} />
+        ) : (
+          <Logo theme="auto" width={132} height={32} href={undefined} />
+        )}
       </div>
 
-      <nav className="mt-2 flex-1 space-y-1">
+      <nav className="mt-3 flex flex-1 flex-col gap-0.5 px-2">
         {navItems.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = isActivePath(pathname, item.href, item.exact)
           return (
             <Link
               key={item.name}
               href={item.href}
               title={isCollapsed ? item.name : undefined}
               className={cn(
-                "group relative flex h-11 w-full items-center rounded-lg text-[14px] transition-colors",
-                isCollapsed ? "justify-center px-0" : "px-3",
+                "flex h-9 items-center rounded-md text-[13px] transition-colors",
+                isCollapsed ? "justify-center" : "gap-2.5 px-2.5",
                 isActive
-                  ? "bg-[#EFF6FF] text-[#2563EB] dark:bg-blue-500/15 dark:text-blue-400"
-                  : "text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#1E293B] dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
+                  ? "bg-[#EFF6FF] font-semibold text-[#2563EB] dark:bg-blue-500/15 dark:text-blue-400"
+                  : "font-medium text-[#475569] hover:bg-[#F8FAFC] hover:text-[#0F172A] dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
               )}
             >
-              {isActive && !isCollapsed && (
-                <span className="absolute bottom-2 left-0 top-2 w-[3px] rounded-r bg-[#2563EB] dark:bg-blue-400" />
-              )}
               <item.icon
                 className={cn(
-                  "h-[18px] w-[18px] shrink-0",
-                  !isCollapsed && "mr-3",
+                  "h-4 w-4 shrink-0",
                   isActive
                     ? "text-[#2563EB] dark:text-blue-400"
-                    : "text-[#94A3B8] dark:text-slate-500"
+                    : "text-[#64748B] dark:text-slate-500"
                 )}
               />
-              <span
-                className={cn(
-                  "overflow-hidden whitespace-nowrap transition-all duration-300",
-                  isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100",
-                  isActive ? "font-semibold" : "font-medium"
-                )}
-              >
-                {item.name}
-              </span>
+              {!isCollapsed && <span className="truncate">{item.name}</span>}
             </Link>
           )
         })}
       </nav>
 
-      <div className="mt-auto flex flex-col gap-4 pt-6">
+      <div className="mt-auto flex flex-col gap-2 px-2 pb-2 pt-3">
         {!isCollapsed ? (
-          <div className="relative overflow-hidden rounded-xl bg-[#2563EB] p-4 text-white">
-            <div className="relative z-10">
-              <p className="mb-1 text-[13px] font-semibold">Upgrade to Pro</p>
-              <p className="mb-3 text-[11px] font-normal leading-relaxed text-blue-100/90">
-                Advanced analytics and unlimited logs.
-              </p>
-              <button
-                type="button"
-                className="w-full rounded-lg bg-white/15 py-2 text-[12px] font-semibold transition-colors hover:bg-white/25"
-              >
-                Learn more
-              </button>
-            </div>
+          <div className="rounded-lg bg-[#2563EB] px-3 py-3 text-white">
+            <p className="text-[13px] font-semibold leading-none">
+              Upgrade to Pro
+            </p>
+            <p className="mt-1.5 text-[12px] leading-snug text-blue-100">
+              Advanced analytics and unlimited logs.
+            </p>
+            <button
+              type="button"
+              className="mt-2.5 w-full rounded-md bg-white/15 py-1.5 text-[12px] font-semibold hover:bg-white/25"
+            >
+              Learn more
+            </button>
           </div>
         ) : (
           <button
             type="button"
-            className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-[#2563EB] text-white"
+            className="mx-auto flex h-8 w-8 items-center justify-center rounded-md bg-[#2563EB] text-white"
             aria-label="Upgrade to Pro"
           >
-            <Sparkles size={18} />
+            <Sparkles size={14} />
           </button>
         )}
 
@@ -171,35 +149,32 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
             <button
               type="button"
               className={cn(
-                "flex w-full items-center rounded-xl p-1.5 text-left transition-colors hover:bg-[#F8FAFC] outline-none dark:hover:bg-white/5",
-                isCollapsed ? "justify-center" : "gap-3",
+                "flex w-full items-center rounded-md text-left outline-none transition-colors hover:bg-[#F8FAFC] dark:hover:bg-white/5",
+                isCollapsed ? "h-9 justify-center" : "h-11 gap-2 px-1.5",
                 accountOpen && "bg-[#F8FAFC] dark:bg-white/5"
               )}
               aria-label="Account menu"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#2563EB] text-white">
-                <User className="h-4 w-4" />
-              </div>
-              <div
-                className={cn(
-                  "min-w-0 flex-1 overflow-hidden transition-all duration-300",
-                  isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
-                )}
-              >
-                <p className="truncate text-[13px] font-semibold leading-tight text-[#1E293B] dark:text-slate-100">
-                  {name}
-                </p>
-                <p className="mt-0.5 truncate text-[11px] font-medium text-[#94A3B8] dark:text-slate-500">
-                  {userEmail ?? "Account"}
-                </p>
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2563EB] text-white">
+                <User className="h-3.5 w-3.5" />
               </div>
               {!isCollapsed && (
-                <ChevronUp
-                  className={cn(
-                    "mr-1 h-4 w-4 shrink-0 text-slate-400 transition-transform",
-                    !accountOpen && "rotate-180"
-                  )}
-                />
+                <>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-medium leading-tight text-[#0F172A] dark:text-slate-100">
+                      {name}
+                    </p>
+                    <p className="truncate text-[11px] leading-tight text-[#64748B] dark:text-slate-400">
+                      {userEmail ?? "Account"}
+                    </p>
+                  </div>
+                  <ChevronUp
+                    className={cn(
+                      "h-3.5 w-3.5 shrink-0 text-[#94A3B8] transition-transform",
+                      !accountOpen && "rotate-180"
+                    )}
+                  />
+                </>
               )}
             </button>
           </DropdownMenuTrigger>
@@ -207,21 +182,21 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
             side="top"
             align={isCollapsed ? "center" : "start"}
             sideOffset={8}
-            className="w-64 rounded-xl border-slate-200 p-0 dark:border-white/10 dark:bg-neutral-900"
+            className="w-56 rounded-lg border-[#E2E8F0] p-0 dark:border-white/10 dark:bg-neutral-900"
           >
-            <div className="border-b border-slate-100 px-3.5 py-3 dark:border-white/10">
-              <p className="text-[13px] font-semibold text-[#1E293B] dark:text-slate-100">
+            <div className="border-b border-[#E2E8F0] px-3 py-2.5 dark:border-white/10">
+              <p className="text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
                 {name}
               </p>
               {userEmail ? (
-                <p className="mt-1 flex items-start gap-1.5 text-[12px] text-slate-500 dark:text-slate-400">
+                <p className="mt-1 flex items-start gap-1.5 text-[12px] text-[#64748B] dark:text-slate-400">
                   <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                   <span className="break-all">{userEmail}</span>
                 </p>
               ) : null}
             </div>
-            <div className="p-1.5">
-              <DropdownMenuItem asChild className="cursor-pointer rounded-lg">
+            <div className="p-1">
+              <DropdownMenuItem asChild className="cursor-pointer rounded-md">
                 <Link href="/dashboard/settings">
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
@@ -229,7 +204,7 @@ export function Sidebar({ userEmail, userName }: SidebarProps) {
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="cursor-pointer rounded-lg text-red-600 focus:bg-red-50 focus:text-red-600 dark:text-red-400 dark:focus:bg-red-500/10 dark:focus:text-red-400"
+                className="cursor-pointer rounded-md text-red-600 focus:bg-red-50 focus:text-red-600 dark:text-red-400 dark:focus:bg-red-500/10 dark:focus:text-red-400"
                 onClick={() => void signOut()}
               >
                 <LogOut className="mr-2 h-4 w-4" />

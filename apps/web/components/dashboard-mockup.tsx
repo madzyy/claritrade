@@ -72,7 +72,7 @@ export function DashboardMockup() {
   const [activeTab, setActiveTab] = useState<"overview" | "journal" | "news" | "psychology">("overview")
 
   return (
-    <div className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-2xl overflow-hidden flex flex-col lg:flex-row h-[680px]">
+    <div className="w-full rounded-xl sm:rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-2xl overflow-hidden flex flex-col lg:flex-row h-[min(72dvh,560px)] sm:h-[640px] lg:h-[680px]">
       
       {/* Mock Sidebar */}
       <div className="hidden lg:flex w-64 border-r border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 flex-col p-6 shrink-0 justify-between">
@@ -122,17 +122,17 @@ export function DashboardMockup() {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-white dark:bg-neutral-950">
         
         {/* Header */}
-        <div className="h-16 border-b border-neutral-200 dark:border-neutral-800 px-6 flex items-center justify-between shrink-0">
+        <div className="h-14 sm:h-16 border-b border-neutral-200 dark:border-neutral-800 px-3 sm:px-6 flex items-center justify-between shrink-0 gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-neutral-400">Sandbox Dashboard</span>
-            <span className="text-xs text-neutral-300 dark:text-neutral-700">/</span>
+            <span className="hidden text-xs font-semibold text-neutral-400 sm:inline">Sandbox Dashboard</span>
+            <span className="hidden text-xs text-neutral-300 dark:text-neutral-700 sm:inline">/</span>
             <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
               {activeTab}
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Demo Mode Active
             </div>
@@ -140,7 +140,7 @@ export function DashboardMockup() {
         </div>
 
         {/* Tab Controls */}
-        <div className="border-b border-neutral-100 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/10 px-6 py-3 shrink-0">
+        <div className="border-b border-neutral-100 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/10 px-3 sm:px-6 py-2 sm:py-3 shrink-0">
           <div className="flex gap-2 overflow-x-auto scrollbar-none">
             {[
               { id: "overview", label: "Overview", icon: Activity },
@@ -169,7 +169,7 @@ export function DashboardMockup() {
         </div>
 
         {/* Content Pane */}
-        <div className="flex-1 p-6 overflow-y-auto min-h-0 bg-neutral-50/30 dark:bg-neutral-950/20">
+        <div className="flex-1 p-3 sm:p-6 overflow-y-auto min-h-0 bg-neutral-50/30 dark:bg-neutral-950/20">
           
           {/* TAB 1: OVERVIEW */}
           {activeTab === "overview" && (

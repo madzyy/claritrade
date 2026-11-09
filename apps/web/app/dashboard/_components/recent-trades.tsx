@@ -1,7 +1,10 @@
 import {
+  biasShort,
   getNyParts,
   killzoneLabel,
-  setupTypeShort,
+  profileShort,
+  rangeLiquidityShort,
+  rangeTypeShort,
 } from "@/lib/trading"
 import {
   TableSection,
@@ -27,6 +30,7 @@ interface RecentTradesProps {
     setupType: string | null
     killzone: string | null
     htfBias: string | null
+    tags: string[]
     htfTimeframe: string | null
     ltfTimeframe: string | null
     liquidityTaken: boolean
@@ -35,7 +39,7 @@ interface RecentTradesProps {
   }>
 }
 
-const COLS = ["Setup", "R Multiple", "Net Profit / Loss", "Outcome"] as const
+const COLS = ["LTP", "R Multiple", "Net Profit / Loss", "Outcome"] as const
 
 function outcomeLabel(outcome: string | null) {
   if (outcome === "WIN") return "Win"
@@ -62,15 +66,20 @@ export function RecentTrades({ trades }: RecentTradesProps) {
         const ny = getNyParts(new Date(trade.dateOpened))
         const dir = trade.direction.toUpperCase()
         const side = dir === "BUY" || dir === "LONG" ? "Long" : "Short"
+        const profile = profileShort(trade.setupType)
+        const range = rangeTypeShort(trade.tags)
+        const draw = rangeLiquidityShort(trade.tags)
+        const ltp = draw
+          ? `${biasShort(trade.htfBias)} · ${draw}`
+          : biasShort(trade.htfBias)
+        const bits = [range, profile === "—" ? "" : profile].filter(Boolean)
         return (
           <TableRow key={trade.id}>
             <TableLabel
               title={`${trade.pair} · ${side}`}
-              subtitle={`${killzoneLabel(trade.killzone)} · ${ny.dateLabel} ${ny.timeLabel} NY`}
+              subtitle={`${bits.length ? `${bits.join(" · ")} · ` : ""}${killzoneLabel(trade.killzone)} · ${ny.dateLabel} ${ny.timeLabel} NY`}
             />
-            <TableCell label="Setup">
-              {setupTypeShort(trade.setupType)}
-            </TableCell>
+            <TableCell label="LTP">{ltp}</TableCell>
             <TableCell label="R">
               {trade.rMultiple != null
                 ? `${trade.rMultiple >= 0 ? "+" : ""}${trade.rMultiple.toFixed(2)}R`

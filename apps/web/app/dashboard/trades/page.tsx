@@ -25,5 +25,10 @@ export default async function TradeLogPage() {
     updatedAt: t.updatedAt.toISOString(),
   }))
 
-  return <TradeLogClient trades={serialized} />
+  return (
+    <TradeLogClient
+      trades={serialized}
+      accountName={journal?.name ?? "Journal"}
+    />
+  )
 }

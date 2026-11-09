@@ -44,7 +44,7 @@ export function PerformanceChart({
 
   // Light: soft slate. Dark: very faint white so dotted rules don’t dominate.
   const gridStroke = isDark ? "rgba(255,255,255,0.06)" : "#E2E8F0"
-  const tickFill = isDark ? "#94A3B8" : "#94A3B8"
+  const tickFill = isDark ? "#94A3B8" : "#64748B"
   const cursorStroke = isDark ? "rgba(255,255,255,0.12)" : "#E2E8F0"
 
   return (
@@ -63,7 +63,7 @@ export function PerformanceChart({
             className={cn(
               "text-[11px] font-medium tabular-nums",
               !hasTrades
-                ? "text-[#94A3B8] dark:text-slate-500"
+                ? "text-[#64748B] dark:text-slate-400"
                 : delta >= 0
                   ? "text-[#2563EB] dark:text-blue-400"
                   : "text-[#DC2626] dark:text-red-400"

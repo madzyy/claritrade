@@ -11,6 +11,7 @@ const SHORT: Record<string, string> = {
   ASIAN: "Asian",
   LONDON_OPEN: "LDN Open",
   NY_AM: "NY AM",
+  EQUITY_OPEN: "9:30",
   LONDON_CLOSE: "LDN Close",
   NY_LUNCH: "Lunch",
   NY_PM: "NY PM",

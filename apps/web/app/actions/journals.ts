@@ -7,6 +7,7 @@ import {
   getJournalOwnedByUser,
   listJournalsForUser,
   setActiveJournalCookie,
+  syncJournalBalance,
   type JournalSummary,
 } from "@/lib/journals"
 import { prisma } from "@workspace/db"
@@ -48,6 +49,7 @@ export async function setActiveJournalAction(journalId: string) {
 export async function createJournalAction(input: {
   name: string
   description?: string
+  startingBalance: number
   switchTo?: boolean
 }) {
   const user = await getOrCreatePrismaUser()
@@ -59,6 +61,14 @@ export async function createJournalAction(input: {
     return { success: false as const, error: "Name must be 60 characters or less" }
   }
 
+  const startingBalance = Number(input.startingBalance)
+  if (!Number.isFinite(startingBalance) || startingBalance <= 0) {
+    return {
+      success: false as const,
+      error: "Enter a valid starting account balance greater than 0",
+    }
+  }
+
   await ensureDefaultJournal(user.id)
 
   try {
@@ -68,6 +78,8 @@ export async function createJournalAction(input: {
         name,
         description: input.description?.trim() || null,
         isDefault: false,
+        startingBalance,
+        currentBalance: startingBalance,
       },
     })
 
@@ -196,4 +208,26 @@ export async function setDefaultJournalAction(journalId: string) {
 
   revalidateJournalPaths()
   return { success: true as const }
+}
+
+/** Current equity for the active journal (for trade log form). */
+export async function getActiveJournalBalanceAction(): Promise<{
+  success: boolean
+  currentBalance?: number
+  startingBalance?: number
+  journalName?: string
+  error?: string
+}> {
+  const user = await getOrCreatePrismaUser()
+  if (!user) return { success: false, error: "Not signed in" }
+
+  const journal = await getActiveJournal(user)
+  const synced = await syncJournalBalance(journal.id)
+
+  return {
+    success: true,
+    currentBalance: synced.currentBalance,
+    startingBalance: synced.startingBalance,
+    journalName: synced.name,
+  }
 }
