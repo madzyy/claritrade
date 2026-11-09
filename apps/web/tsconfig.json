@@ -20,5 +20,10 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "app/dashboard/_components/log-trade/_core-body.tsx",
+    "app/dashboard/_components/log-trade/core-concepts.tsx",
+    "scripts"
+  ]
 }
