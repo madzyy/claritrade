@@ -63,7 +63,7 @@ import {
   type KillzoneId,
 } from "@/lib/trading"
 import { FormState, initialForm } from "./log-trade/types"
-import { LogTradeProvider } from "./log-trade/form-context"
+import { LogTradeProvider, type LogTradeCtx } from "./log-trade/form-context"
 import { ExecuteFields, ExecuteNotes } from "./log-trade/execute-fields"
 import { LtpModel } from "./log-trade/ltp-model"
 import { ItpModel } from "./log-trade/itp-model"
@@ -850,38 +850,16 @@ export function LogTradeModal() {
         : [...prev.structureContext, id],
     }))
   }
-  const toggleList = (
-    field:
-      | "relativeLevels"
-      | "relativeSequence"
-      | "gapFramework"
-      | "institutionalChecks"
-      | "institutionalChecksItp"
-      | "institutionalChecksStp"
-      | "mmxmSequence"
-      | "ltpIofChecks"
-      | "dealingJobs"
-      | "htfKlContext"
-      | "rangeTfTools"
-      | "closeSignatures"
-      | "closeContext"
-      | "weekProfileSteps"
-      | "weekNotes"
-      | "itpToc"
-      | "stpKlNotes"
-      | "purgeQuals"
-      | "prevSessions"
-      | "newsTells"
-      | "eqoManipQ"
-      | "eqoDistQ",
-    id: string
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: prev[field].includes(id)
-        ? prev[field].filter((item) => item !== id)
-        : [...prev[field], id],
-    }))
+  const toggleList: LogTradeCtx["toggleList"] = (field, id) => {
+    setFormData((prev) => {
+      const list = prev[field] as string[]
+      return {
+        ...prev,
+        [field]: list.includes(id)
+          ? list.filter((item) => item !== id)
+          : [...list, id],
+      }
+    })
   }
   const setBias = (bias: string) => {
     setFormData((prev) => {
@@ -908,7 +886,7 @@ export function LogTradeModal() {
       return { ...prev, ...patch }
     })
   }
-  const ctx = {
+  const ctx: LogTradeCtx = {
     formData,
     setFormData,
     handleChange,
